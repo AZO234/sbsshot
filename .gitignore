@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+*/build/
+*/.gradle/
+
+# IntelliJ IDEA (自動生成されるもの)
+*.iml
+*.iws
+*.ipr
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+.idea/dictionaries/
+.idea/dynamic.classpath
+out/
+
+# Mod ビルド成果物
+dist/
+
+# Forge / NeoForge 実行ディレクトリ
+forge/run/
+neoforge/run/
+fabric/run/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,41 @@
+plugins {
+    // MDG 2.0.141+ required for Minecraft 26.1 / Gradle 9.1+
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'java'
+}
+
+version = '1.0.0'
+group = 'me.azo234.sbsshot'
+
+java {
+    // Minecraft 26.1 requires Java 25
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+}
+
+
+// common/ の Java ソースをこのプロジェクトのコンパイル対象に追加
+sourceSets {
+    main {
+        java {
+            srcDirs += ['../common/src/main/java']
+        }
+    }
+}
+
+neoForge {
+    version = "26.1.0.1-beta"
+
+    runs {
+        client {
+            client()
+        }
+    }
+}
+
+// Copy shared assets from common/
+def commonDir = rootProject.file('../common')
+
+processResources {
+    from("${commonDir}/assets") { into('assets') }
+    from("${commonDir}/pack.png") { into('.') }
+}

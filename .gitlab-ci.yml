@@ -1,0 +1,254 @@
+# .gitlab-ci.yml
+#
+# タグ push 時に自動実行（例: git tag v1.0.0 && git push --tags）:
+#   1. Forge / NeoForge / Fabric を並列ビルド
+#   2. Modrinth・CurseForge へ curl でアップロード
+#   3. GitLab Releases にアセットを添付
+#
+# 必要な CI/CD Variables (Settings → CI/CD → Variables):
+#   MODRINTH_TOKEN          : Modrinth API トークン（Masked）
+#   CURSEFORGE_TOKEN        : CurseForge API キー（Masked）
+#   MODRINTH_ID_FORGE       : Modrinth プロジェクト ID (Forge)
+#   MODRINTH_ID_NEOFORGE    : Modrinth プロジェクト ID (NeoForge)
+#   MODRINTH_ID_FABRIC      : Modrinth プロジェクト ID (Fabric)
+#   CURSEFORGE_ID_FORGE     : CurseForge プロジェクト ID (数字)
+#   CURSEFORGE_ID_NEOFORGE  : CurseForge プロジェクト ID (数字)
+#   CURSEFORGE_ID_FABRIC    : CurseForge プロジェクト ID (数字)
+#   CURSEFORGE_GAME_VERSION_FORGE    : CurseForge の gameVersions ID (1.20.1)
+#   CURSEFORGE_GAME_VERSION_NEO_FAB  : CurseForge の gameVersions ID (26.1)
+
+stages:
+  - build
+  - publish
+
+# ---------------------------------------------------------------------------
+# 共通設定
+# ---------------------------------------------------------------------------
+default:
+  image: eclipse-temurin:25-jdk
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl jq
+
+.build_template: &build_template
+  stage: build
+  # タグ push のみ実行
+  rules:
+    - if: $CI_COMMIT_TAG
+  cache:
+    key: gradle-$CI_JOB_NAME
+    paths:
+      - .gradle/
+  artifacts:
+    paths:
+      - "*/build/libs/*.jar"
+    expire_in: 1 day
+
+# ---------------------------------------------------------------------------
+# ビルドジョブ（並列）
+# ---------------------------------------------------------------------------
+build:forge:
+  <<: *build_template
+  image: eclipse-temurin:17-jdk   # Forge は Java 17
+  script:
+    - chmod +x forge/gradlew
+    - cd forge && ./gradlew build --no-daemon --info
+  artifacts:
+    paths:
+      - forge/build/libs/*.jar
+    expire_in: 1 day
+
+build:neoforge:
+  <<: *build_template
+  script:
+    - chmod +x neoforge/gradlew
+    - cd neoforge && ./gradlew build --no-daemon --info
+  artifacts:
+    paths:
+      - neoforge/build/libs/*.jar
+    expire_in: 1 day
+
+build:fabric:
+  <<: *build_template
+  script:
+    - chmod +x fabric/gradlew
+    - cd fabric && ./gradlew build --no-daemon --info
+  artifacts:
+    paths:
+      - fabric/build/libs/*.jar
+    expire_in: 1 day
+
+# ---------------------------------------------------------------------------
+# アップロードジョブ（並列、ビルド完了後）
+# ---------------------------------------------------------------------------
+
+# --- Forge ---
+publish:forge:
+  stage: publish
+  needs: [build:forge]
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    # dev/sources/javadoc を除いたメインJARを特定
+    - |
+      JAR=$(find forge/build/libs -name "*.jar" \
+            ! -name "*-dev.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-javadoc.jar" \
+            -type f | head -1)
+      echo "Uploading: $JAR"
+
+    # Modrinth へアップロード
+    - |
+      curl --fail -s -o /dev/null \
+        -H "Authorization: $MODRINTH_TOKEN" \
+        -F "data={
+          \"project_id\":    \"$MODRINTH_ID_FORGE\",
+          \"name\":          \"$CI_COMMIT_TAG [Forge]\",
+          \"version_number\":\"$CI_COMMIT_TAG\",
+          \"changelog\":     \"See $CI_PROJECT_URL/-/releases/$CI_COMMIT_TAG\",
+          \"game_versions\": [\"1.20.1\"],
+          \"loaders\":       [\"forge\"],
+          \"release_channel\":\"release\",
+          \"featured\":      true
+        }" \
+        -F "files=@$JAR" \
+        https://api.modrinth.com/v2/version
+      echo "✓ Modrinth (Forge)"
+
+    # CurseForge へアップロード
+    - |
+      curl --fail -s -o /dev/null \
+        -H "X-Api-Token: $CURSEFORGE_TOKEN" \
+        -F "metadata={
+          \"changelog\":        \"See $CI_PROJECT_URL/-/releases/$CI_COMMIT_TAG\",
+          \"changelogType\":    \"markdown\",
+          \"gameVersions\":     [$CURSEFORGE_GAME_VERSION_FORGE],
+          \"releaseType\":      \"release\",
+          \"displayName\":      \"$CI_COMMIT_TAG [Forge]\"
+        };type=application/json" \
+        -F "file=@$JAR" \
+        https://minecraft.curseforge.com/api/projects/$CURSEFORGE_ID_FORGE/upload-file
+      echo "✓ CurseForge (Forge)"
+
+    # GitLab Release にアセットを追加
+    - |
+      curl --fail -s -o /dev/null \
+        --request POST \
+        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "Content-Type: application/json" \
+        --data "{
+          \"name\": \"$(basename $JAR)\",
+          \"url\":  \"$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/$JAR\"
+        }" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+      echo "✓ GitLab Release (Forge)"
+
+# --- NeoForge ---
+publish:neoforge:
+  stage: publish
+  needs: [build:neoforge]
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      JAR=$(find neoforge/build/libs -name "*.jar" \
+            ! -name "*-dev.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-javadoc.jar" \
+            -type f | head -1)
+      echo "Uploading: $JAR"
+    - |
+      curl --fail -s -o /dev/null \
+        -H "Authorization: $MODRINTH_TOKEN" \
+        -F "data={
+          \"project_id\":    \"$MODRINTH_ID_NEOFORGE\",
+          \"name\":          \"$CI_COMMIT_TAG [NeoForge]\",
+          \"version_number\":\"$CI_COMMIT_TAG\",
+          \"changelog\":     \"See $CI_PROJECT_URL/-/releases/$CI_COMMIT_TAG\",
+          \"game_versions\": [\"26.1\"],
+          \"loaders\":       [\"neoforge\"],
+          \"release_channel\":\"release\",
+          \"featured\":      true
+        }" \
+        -F "files=@$JAR" \
+        https://api.modrinth.com/v2/version
+      echo "✓ Modrinth (NeoForge)"
+    - |
+      curl --fail -s -o /dev/null \
+        -H "X-Api-Token: $CURSEFORGE_TOKEN" \
+        -F "metadata={
+          \"changelog\":     \"See $CI_PROJECT_URL/-/releases/$CI_COMMIT_TAG\",
+          \"changelogType\": \"markdown\",
+          \"gameVersions\":  [$CURSEFORGE_GAME_VERSION_NEO_FAB],
+          \"releaseType\":   \"release\",
+          \"displayName\":   \"$CI_COMMIT_TAG [NeoForge]\"
+        };type=application/json" \
+        -F "file=@$JAR" \
+        https://minecraft.curseforge.com/api/projects/$CURSEFORGE_ID_NEOFORGE/upload-file
+      echo "✓ CurseForge (NeoForge)"
+    - |
+      curl --fail -s -o /dev/null \
+        --request POST \
+        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "Content-Type: application/json" \
+        --data "{
+          \"name\": \"$(basename $JAR)\",
+          \"url\":  \"$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/$JAR\"
+        }" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+      echo "✓ GitLab Release (NeoForge)"
+
+# --- Fabric ---
+publish:fabric:
+  stage: publish
+  needs: [build:fabric]
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      JAR=$(find fabric/build/libs -name "*.jar" \
+            ! -name "*-dev.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-javadoc.jar" \
+            -type f | head -1)
+      echo "Uploading: $JAR"
+    - |
+      curl --fail -s -o /dev/null \
+        -H "Authorization: $MODRINTH_TOKEN" \
+        -F "data={
+          \"project_id\":    \"$MODRINTH_ID_FABRIC\",
+          \"name\":          \"$CI_COMMIT_TAG [Fabric]\",
+          \"version_number\":\"$CI_COMMIT_TAG\",
+          \"changelog\":     \"See $CI_PROJECT_URL/-/releases/$CI_COMMIT_TAG\",
+          \"game_versions\": [\"26.1\"],
+          \"loaders\":       [\"fabric\"],
+          \"release_channel\":\"release\",
+          \"featured\":      true
+        }" \
+        -F "files=@$JAR" \
+        https://api.modrinth.com/v2/version
+      echo "✓ Modrinth (Fabric)"
+    - |
+      curl --fail -s -o /dev/null \
+        -H "X-Api-Token: $CURSEFORGE_TOKEN" \
+        -F "metadata={
+          \"changelog\":     \"See $CI_PROJECT_URL/-/releases/$CI_COMMIT_TAG\",
+          \"changelogType\": \"markdown\",
+          \"gameVersions\":  [$CURSEFORGE_GAME_VERSION_NEO_FAB],
+          \"releaseType\":   \"release\",
+          \"displayName\":   \"$CI_COMMIT_TAG [Fabric]\"
+        };type=application/json" \
+        -F "file=@$JAR" \
+        https://minecraft.curseforge.com/api/projects/$CURSEFORGE_ID_FABRIC/upload-file
+      echo "✓ CurseForge (Fabric)"
+    - |
+      curl --fail -s -o /dev/null \
+        --request POST \
+        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "Content-Type: application/json" \
+        --data "{
+          \"name\": \"$(basename $JAR)\",
+          \"url\":  \"$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/$JAR\"
+        }" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+      echo "✓ GitLab Release (Fabric)"

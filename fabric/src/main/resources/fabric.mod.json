@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "sbsshot",
+  "version": "1.0.0",
+  "name": "SBSShot",
+  "description": "VR/HMD向けのステレオ立体画像形式（.pns）でスクリーンショットします。",
+  "license": "MIT",
+  "icon": "pack.png",
+  "entrypoints": {
+    "main": [
+      "me.azo234.sbsshot.SbsShotMod"
+    ],
+    "client": [
+      "me.azo234.sbsshot.SbsShotModClient"
+    ],
+    "modmenu": [
+      "me.azo234.sbsshot.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "fabric-api": "*",
+    "minecraft": ">=26.1"
+  },
+  "accessWidener": "sbsshot.accesswidener",
+  "suggests": {
+    "modmenu": "*"
+  }
+}

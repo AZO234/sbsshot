@@ -1,0 +1,14 @@
+{
+  "key.sbsshot.stereo_screenshot": "ステレオスクリーンショット",
+  "key.categories.sbsshot": "SBSShot",
+
+  "sbsshot.stereo.saved":  "ステレオスクリーンショットを保存しました: %s",
+  "sbsshot.stereo.failed": "ステレオスクリーンショットの保存に失敗しました。",
+
+  "sbsshot.config.title":                         "SBSShot — 設定",
+  "sbsshot.config.save":                          "保存",
+  "sbsshot.config.stereo.parallax_cm":            "視差（cm）",
+  "sbsshot.config.stereo.parallax_cm.tooltip":    "眼幅に相当する視差距離（cm）。人間の平均は約 6.5 cm。",
+  "sbsshot.config.stereo.output_sub_dir":         "出力フォルダ",
+  "sbsshot.config.stereo.output_sub_dir.tooltip": "screenshots/ 以下の .pns ファイルの保存先フォルダ名。"
+}

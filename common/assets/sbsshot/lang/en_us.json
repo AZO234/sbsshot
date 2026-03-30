@@ -1,0 +1,14 @@
+{
+  "key.sbsshot.stereo_screenshot": "Stereo Screenshot",
+  "key.categories.sbsshot": "SBSShot",
+
+  "sbsshot.stereo.saved":  "Stereo screenshot saved: %s",
+  "sbsshot.stereo.failed": "Stereo screenshot failed.",
+
+  "sbsshot.config.title":                         "SBSShot — Config",
+  "sbsshot.config.save":                          "Save",
+  "sbsshot.config.stereo.parallax_cm":            "Parallax (cm)",
+  "sbsshot.config.stereo.parallax_cm.tooltip":    "Inter-ocular distance in centimetres. Human average ≈ 6.5 cm.",
+  "sbsshot.config.stereo.output_sub_dir":         "Output folder",
+  "sbsshot.config.stereo.output_sub_dir.tooltip": "Sub-directory under screenshots/ where .pns files are saved."
+}

@@ -1,0 +1,10 @@
+accessWidener v2 official
+
+# Minecraft.pauseGame() は protected → public
+accessible method net/minecraft/client/Minecraft pauseGame (Z)V
+
+# Camera.position フィールド (Vec3) を public に昇格
+accessible field net/minecraft/client/Camera position Lnet/minecraft/world/phys/Vec3;
+
+# Camera.setPosition(Vec3) を public に昇格
+accessible method net/minecraft/client/Camera setPosition (Lnet/minecraft/world/phys/Vec3;)V

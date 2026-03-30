@@ -1,0 +1,9 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.minecraftforge.net' }
+    }
+}
+// NOTE: ForgeGradle 6.x does NOT support Gradle 9.
+// This project uses Gradle 8.11.1 (see gradle/wrapper/gradle-wrapper.properties).
+rootProject.name = 'sbsshot-forge'
