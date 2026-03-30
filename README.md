@@ -1,6 +1,10 @@
-# SBSShot
+[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/forge.jpeg" width="64" alt="Forge icon">](https://files.minecraftforge.net/net/minecraftforge/forge/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
+
+# <img src="common/pack.png" height="64" alt="SBSShot icon"> SBSShot
 
 > 🇯🇵 [日本語はこちら](README_jp.md)
+
+<img src="images/stereo_2026-03-30_15.43.56.png" alt="PNS screenshot"> 
 
 **SBSShot** is a Minecraft mod that captures **Side-by-Side (SBS) stereo screenshots** for VR/HMD devices.
 
@@ -23,7 +27,7 @@ You can view `.pns` files with the **SBS Stereo Viewer**:
 - Saved to `.minecraft/screenshots/stereo/stereo_YYYY-MM-DD_HH.mm.ss.pns`
 - Configurable parallax (default: 6.5 cm) and output subdirectory
 - HUD-free rendering — ideal for VR/HMD use
-- Supports **Forge 1.20.1**, **NeoForge 26.1**, and **Fabric 26.1**
+- Supports **Forge**, **NeoForge**, and **Fabric**
 
 ---
 
@@ -68,3 +72,8 @@ The mod renders the scene twice — once for the left eye and once for the right
 ## License
 
 MIT
+
+## Link
+
+[Modrinth](https://modrinth.com/project/sbsshot)
+[CurseForge](https://legacy.curseforge.com/minecraft/mc-mods/sbsshot)

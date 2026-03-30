@@ -1,6 +1,10 @@
-# SBSShot
+[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/forge.jpeg" width="64" alt="Forge icon">](https://files.minecraftforge.net/net/minecraftforge/forge/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
+
+# <img src="common/pack.png" height="64" alt="SBSShot icon"> SBSShot
 
 > 🇬🇧 [English README is here](README.md)
+
+<img src="images/stereo_2026-03-30_15.43.56.png" alt="PNS screenshot"> 
 
 **SBSShot** は、VR/HMD 向けに **Side-by-Side (SBS) ステレオスクリーンショット**を撮影する Minecraft mod です。
 
@@ -23,7 +27,7 @@
 - 保存先：`.minecraft/screenshots/stereo/stereo_YYYY-MM-DD_HH.mm.ss.pns`
 - 視差（デフォルト: 6.5 cm）と出力サブディレクトリを設定可能
 - HUD なしのレンダリング — VR/HMD 向けに最適
-- **Forge 1.20.1**・**NeoForge 26.1**・**Fabric 26.1** 対応
+- **Forge**・**NeoForge**・**Fabric** 対応
 
 ---
 
@@ -68,3 +72,8 @@ mod の `.jar` ファイルを `.minecraft/mods/` フォルダに入れるだけ
 ## ライセンス
 
 MIT
+
+## リンク
+
+[Modrinth](https://modrinth.com/project/sbsshot)
+[CurseForge](https://legacy.curseforge.com/minecraft/mc-mods/sbsshot)
