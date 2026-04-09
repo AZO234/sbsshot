@@ -1,5 +1,5 @@
 plugins {
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8)'
     id 'java'
 }
 
@@ -11,8 +11,10 @@ java {
 }
 
 minecraft {
-    mappings channel: 'official', version: '26.1'
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    mappings channel: 'official', version: '26.1.1'
+    accessTransformers {                                     // = file(...) → ブロック形式
+        file('src/main/resources/META-INF/accesstransformer.cfg')
+    }
 
     runs {
         client {
@@ -51,7 +53,7 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:26.1-62.0.9'
+    minecraft 'net.minecraftforge:forge:26.1.1-63.0.2'
 }
 
 // Copy shared lang files and icon from common/

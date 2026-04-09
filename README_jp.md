@@ -75,5 +75,5 @@ MIT
 
 ## リンク
 
-[Modrinth](https://modrinth.com/project/sbsshot)
+[Modrinth](https://modrinth.com/project/sbsshot)  
 [CurseForge](https://legacy.curseforge.com/minecraft/mc-mods/sbsshot)

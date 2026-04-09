@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[62,)"
 license="MIT"
 
 [[mods]]
@@ -11,13 +11,13 @@ description="VR/HMD向けのステレオ立体画像形式（.pns）でスクリ
 [[dependencies.sbsshot]]
     modId="forge"
     mandatory=true
-    versionRange="[47,)"
+    versionRange="[62,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.sbsshot]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.20.1,1.21)"
+    versionRange="[26.1)"
     ordering="NONE"
     side="BOTH"
