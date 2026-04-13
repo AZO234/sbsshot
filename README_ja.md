@@ -1,4 +1,4 @@
-[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
+[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
 
 # <img src="common/pack.png" height="64" alt="SBSShot icon"> SBSShot
 
@@ -58,7 +58,7 @@ mod の `.jar` ファイルを `.minecraft/mods/` フォルダに入れます。
 | `parallax_cm` | `6.5` | カメラ間隔（センチメートル） |
 | `output_sub_dir` | `stereo` | `screenshots/` 内のサブディレクトリ名 |
 
-設定は **Mod Menu**（Fabric）または **Config** 画面（NeoForge/Forge）からゲーム内で変更できます。
+設定は **Mod Menu**（Fabric）または **Config** 画面（NeoForge）からゲーム内で変更できます。
 
 ---
 

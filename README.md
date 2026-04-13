@@ -1,10 +1,10 @@
-[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
+[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
 
 # <img src="common/pack.png" height="64" alt="SBSShot icon"> SBSShot
 
 ![](https://img.shields.io/github/v/tag/azo234/sbsshot) ![](https://img.shields.io/github/actions/workflow/status/azo234/sbsshot/publish.yml)
 
-> 🇯🇵 [日本語はこちら](README_jp.md)
+> 🇯🇵 [日本語はこちら](README_ja.md)
 
 <img src="images/stereo_2026-03-30_15.43.56.png" alt="PNS screenshot"> 
 
@@ -58,7 +58,7 @@ For **NeoForge**, no additional dependency mods are required.
 | `parallax_cm` | `6.5` | Camera separation in centimeters |
 | `output_sub_dir` | `stereo` | Subdirectory inside `screenshots/` |
 
-Settings can be changed in-game via the **Mod Menu** (Fabric) or the **Config** screen (NeoForge/Forge).
+Settings can be changed in-game via the **Mod Menu** (Fabric) or the **Config** screen (NeoForge).
 
 ---
 

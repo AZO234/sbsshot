@@ -28,7 +28,7 @@ Thumbs.db
 
 # AI
 .claude/
-*/AI.md
-*/CLAUDE.md
-*/GEMINI.md
-*/AGENTS.md
+AI.md
+CLAUDE.md
+GEMINI.md
+AGENTS.md
