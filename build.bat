@@ -4,17 +4,15 @@
 ::
 ::  使い方:
 ::    build.bat              # すべてのローダーをビルド
-::    build.bat forge        # Forge のみ
 ::    build.bat neoforge     # NeoForge のみ
 ::    build.bat fabric       # Fabric のみ
-::    build.bat forge fabric # 複数指定も可
 :: =============================================================================
 
 setlocal enabledelayedexpansion
 
 set SCRIPT_DIR=%~dp0
 set OUTPUT_DIR=%SCRIPT_DIR%dist
-set ALL_LOADERS=forge neoforge fabric
+set ALL_LOADERS=neoforge fabric
 set SUCCEEDED=
 set FAILED=
 
@@ -34,7 +32,7 @@ if "%~1"=="" (
         )
     )
     if "!VALID!"=="false" (
-        echo [ERROR] Unknown loader: '%ARG%'  (valid: forge, neoforge, fabric^)
+        echo [ERROR] Unknown loader: '%ARG%'  (valid: neoforge, fabric^)
         exit /b 1
     )
     shift

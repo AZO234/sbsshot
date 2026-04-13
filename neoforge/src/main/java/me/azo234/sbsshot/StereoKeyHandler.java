@@ -18,7 +18,7 @@ public class StereoKeyHandler {
 
     public static final KeyMapping KEY_STEREO = new KeyMapping(
             "key.sbsshot.stereo_screenshot",
-            GLFW.GLFW_KEY_F12,
+            GLFW.GLFW_KEY_PERIOD,
             CATEGORY
     );
 

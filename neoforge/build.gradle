@@ -23,7 +23,7 @@ sourceSets {
 }
 
 neoForge {
-    version = "26.1.0.1-beta"
+    version = "26.1.2.7-beta"
 
     runs {
         client {

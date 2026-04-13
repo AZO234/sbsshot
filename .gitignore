@@ -18,11 +18,17 @@ out/
 # Mod ビルド成果物
 dist/
 
-# Forge / NeoForge 実行ディレクトリ
-forge/run/
+# 実行ディレクトリ
 neoforge/run/
 fabric/run/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# AI
+.claude/
+*/AI.md
+*/CLAUDE.md
+*/GEMINI.md
+*/AGENTS.md

@@ -1,5 +1,6 @@
 {
   "key.sbsshot.stereo_screenshot": "Stereo Screenshot",
+  "key.category.sbsshot.category": "SBSShot",
   "key.categories.sbsshot": "SBSShot",
 
   "sbsshot.stereo.saved":  "Stereo screenshot saved: %s",

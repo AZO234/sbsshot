@@ -6,6 +6,7 @@ license="MIT"
 modId="sbsshot"
 version="1.0.0"
 displayName="SBSShot"
+logoFile="pack.png"
 description="VR/HMD向けのステレオ立体画像形式（.pns）でスクリーンショットします。"
 
 [[dependencies.sbsshot]]

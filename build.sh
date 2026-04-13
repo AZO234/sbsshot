@@ -4,16 +4,14 @@
 #
 #  使い方:
 #    ./build.sh              # すべてのローダーをビルド
-#    ./build.sh forge        # Forge のみ
 #    ./build.sh neoforge     # NeoForge のみ
 #    ./build.sh fabric       # Fabric のみ
-#    ./build.sh forge fabric # 複数指定も可
 # =============================================================================
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ALL_LOADERS=("forge" "neoforge" "fabric")
+ALL_LOADERS=("neoforge" "fabric")
 OUTPUT_DIR="$SCRIPT_DIR/dist"
 
 # ---- カラー出力 -------------------------------------------------------
@@ -39,7 +37,7 @@ else
             fi
         done
         if [ "$valid" = false ]; then
-            error "Unknown loader: '$arg'  (valid: forge, neoforge, fabric)"
+            error "Unknown loader: '$arg'  (valid: neoforge, fabric)"
             exit 1
         fi
     done

@@ -1,5 +1,6 @@
 {
   "key.sbsshot.stereo_screenshot": "ステレオスクリーンショット",
+  "key.category.sbsshot.category": "SBSShot",
   "key.categories.sbsshot": "SBSShot",
 
   "sbsshot.stereo.saved":  "ステレオスクリーンショットを保存しました: %s",

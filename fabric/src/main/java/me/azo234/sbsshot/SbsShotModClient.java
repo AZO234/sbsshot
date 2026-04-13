@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 
 public class SbsShotModClient implements ClientModInitializer {
 
@@ -26,7 +27,7 @@ public class SbsShotModClient implements ClientModInitializer {
 
         keyStereo = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.sbsshot.stereo_screenshot",
-                InputConstants.KEY_F12,
+                InputConstants.KEY_PERIOD,
                 category
         ));
 

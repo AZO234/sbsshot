@@ -1,6 +1,8 @@
-[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/forge.jpeg" width="64" alt="Forge icon">](https://files.minecraftforge.net/net/minecraftforge/forge/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
+[<img src="images/minecraft.svg" width="64" alt="Fabric icon">](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc) [<img src="images/fabric.png" width="64" alt="Fabric icon">](https://fabricmc.net/) [<img src="images/neoforge.png" width="64" alt="NeoForge icon">](https://neoforged.net/) [<img src="images/curseforge.png" width="64" alt="CurseForge icon">](https://www.curseforge.com/) [<img src="images/modrinth.webp" width="64" alt="Modrinth icon">](https://modrinth.com/) <img src="images/java.svg" height="64" alt="Java icon"> 
 
 # <img src="common/pack.png" height="64" alt="SBSShot icon"> SBSShot
+
+![](https://img.shields.io/github/v/tag/azo234/sbsshot) ![](https://img.shields.io/github/actions/workflow/status/azo234/sbsshot/publish.yml)
 
 > 🇯🇵 [日本語はこちら](README_jp.md)
 
@@ -8,7 +10,7 @@
 
 **SBSShot** is a Minecraft mod that captures **Side-by-Side (SBS) stereo screenshots** for VR/HMD devices.
 
-Press **F12** to save a `.pns` (PNG Stereo) file containing left-eye and right-eye views side by side.
+Press **.** to save a `.pns` (PNG Stereo) file containing left-eye and right-eye views side by side.
 
 ---
 
@@ -22,18 +24,30 @@ You can view `.pns` files with the **SBS Stereo Viewer**:
 
 ## Features
 
-- Captures SBS stereo screenshots with a single key press (F12)
+- Captures SBS stereo screenshots with **.**
 - Outputs `.pns` (PNG Side-by-Side Stereo) format
 - Saved to `.minecraft/screenshots/stereo/stereo_YYYY-MM-DD_HH.mm.ss.pns`
 - Configurable parallax (default: 6.5 cm) and output subdirectory
 - HUD-free rendering — ideal for VR/HMD use
-- Supports **Forge**, **NeoForge**, and **Fabric**
+- Supports **NeoForge**, **Fabric**
 
 ---
 
 ## Installation
 
-Place the mod `.jar` in your `.minecraft/mods/` folder. No dependencies required.
+Place the mod `.jar` in your `.minecraft/mods/` folder.
+
+For **Fabric**, install these dependency mods as well:
+
+- **Fabric API**  
+  https://modrinth.com/mod/fabric-api  
+  https://www.curseforge.com/minecraft/mc-mods/fabric-api
+- **Mod Menu**  
+  Optional, but recommended for opening the in-game config screen.  
+  https://modrinth.com/mod/modmenu  
+  https://www.curseforge.com/minecraft/mc-mods/modmenu
+
+For **NeoForge**, no additional dependency mods are required.
 
 ---
 
@@ -52,7 +66,7 @@ Settings can be changed in-game via the **Mod Menu** (Fabric) or the **Config** 
 
 | Key | Action |
 |-----|--------|
-| F12 | Capture SBS stereo screenshot |
+| . | Capture SBS stereo screenshot |
 
 ---
 
