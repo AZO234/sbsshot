@@ -1,7 +1,7 @@
 # .github/workflows/publish.yml
 #
 # GitHub Release を公開したときに自動実行:
-#   1. NeoForge / Fabric を並列ビルド
+#   1. NeoForge / Fabric × 指定した MC バージョンを行列で並列ビルド
 #   2. Modrinth・CurseForge・GitHub Releases へアップロード
 #
 # 必要な Repository Secrets (Settings → Secrets → Actions):
@@ -9,10 +9,10 @@
 #   CURSEFORGE_TOKEN : CurseForge の API キー
 #
 # 必要な Repository Variables (Settings → Variables → Actions):
-#   MODRINTH_ID_NEOFORGE   : 同上（別プロジェクトにする場合は別の値）
+#   MODRINTH_ID_NEOFORGE   : Modrinth の NeoForge プロジェクト ID
 #   MODRINTH_ID_FABRIC     : Modrinth の Fabric プロジェクト ID
-#   CURSEFORGE_ID_NEOFORGE : 同上
-#   CURSEFORGE_ID_FABRIC   : 同上
+#   CURSEFORGE_ID_NEOFORGE : CurseForge の NeoForge プロジェクト ID
+#   CURSEFORGE_ID_FABRIC   : CurseForge の Fabric プロジェクト ID
 
 name: Publish
 
@@ -25,12 +25,19 @@ permissions:
 
 jobs:
 
-  # ---------------------------------------------------------------------------
-  # NeoForge ビルド & アップロード
-  # ---------------------------------------------------------------------------
-  publish-neoforge:
-    name: Publish NeoForge
+  publish:
+    name: Publish ${{ matrix.loader }} (${{ matrix.mc_version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        loader: [neoforge, fabric]
+        mc_version:
+          - "26.1.2"
+          - "26.1.1"
+          - "26.1"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -41,68 +48,40 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Build (NeoForge)
+      - name: Build (${{ matrix.loader }})
         run: |
-          chmod +x neoforge/gradlew
-          cd neoforge && ./gradlew build --no-daemon
+          chmod +x ${{ matrix.loader }}/gradlew
+          cd ${{ matrix.loader }} && ./gradlew build --no-daemon
 
-      - name: Publish (NeoForge)
+      - name: Resolve publish IDs
+        id: ids
+        run: |
+          if [ "${{ matrix.loader }}" = "neoforge" ]; then
+            echo "modrinth_id=${{ vars.MODRINTH_ID_NEOFORGE }}"   >> "$GITHUB_OUTPUT"
+            echo "curseforge_id=${{ vars.CURSEFORGE_ID_NEOFORGE }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "modrinth_id=${{ vars.MODRINTH_ID_FABRIC }}"     >> "$GITHUB_OUTPUT"
+            echo "curseforge_id=${{ vars.CURSEFORGE_ID_FABRIC }}"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish (${{ matrix.loader }} / ${{ matrix.mc_version }})
         uses: Kir-Antipov/mc-publish@v3.3
         with:
-          modrinth-id:    ${{ vars.MODRINTH_ID_NEOFORGE }}
+          modrinth-id:    ${{ steps.ids.outputs.modrinth_id }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           modrinth-featured: true
 
-          curseforge-id:    ${{ vars.CURSEFORGE_ID_NEOFORGE }}
+          curseforge-id:    ${{ steps.ids.outputs.curseforge_id }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # GitHub Releases へのアセット添付は mc_version ごとに重複しないよう
+          # 行列の最初のバージョンのみで行う
+          github-token: ${{ matrix.mc_version == '1.21.5' && secrets.GITHUB_TOKEN || '' }}
 
-          files:           neoforge/build/libs/!(*-@(dev|sources|javadoc)).jar
-          name:            ${{ github.event.release.name }} [NeoForge]
-          version:         ${{ github.event.release.tag_name }}
-          version-type:    release
-          changelog:       ${{ github.event.release.body }}
-          loaders:         neoforge
-          game-versions:   26.1.1
-
-  # ---------------------------------------------------------------------------
-  # Fabric ビルド & アップロード
-  # ---------------------------------------------------------------------------
-  publish-fabric:
-    name: Publish Fabric
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
-        with:
-          java-version: '25'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Build (Fabric)
-        run: |
-          chmod +x fabric/gradlew
-          cd fabric && ./gradlew build --no-daemon
-
-      - name: Publish (Fabric)
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          modrinth-id:    ${{ vars.MODRINTH_ID_FABRIC }}
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          modrinth-featured: true
-
-          curseforge-id:    ${{ vars.CURSEFORGE_ID_FABRIC }}
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-          files:           fabric/build/libs/!(*-@(dev|sources|javadoc)).jar
-          name:            ${{ github.event.release.name }} [Fabric]
-          version:         ${{ github.event.release.tag_name }}
-          version-type:    release
-          changelog:       ${{ github.event.release.body }}
-          loaders:         fabric
-          game-versions:   26.1.1
+          files:        ${{ matrix.loader }}/build/libs/!(*-@(dev|sources|javadoc)).jar
+          name:         ${{ github.event.release.name }} [${{ matrix.loader == 'neoforge' && 'NeoForge' || 'Fabric' }}]
+          version:      ${{ github.event.release.tag_name }}
+          version-type: release
+          changelog:    ${{ github.event.release.body }}
+          loaders:      ${{ matrix.loader }}
+          game-versions: ${{ matrix.mc_version }}
