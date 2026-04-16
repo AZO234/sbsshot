@@ -6,17 +6,17 @@
 
 > 🇯🇵 [日本語はこちら](README_ja.md)
 
-<img src="images/stereo_2026-03-30_15.43.56.png" alt="PNS screenshot"> 
+<img src="images/stereo_2026-03-30_15.43.56.png" alt="PNG screenshot"> 
 
 **SBSShot** is a Minecraft mod that captures **Side-by-Side (SBS) stereo screenshots** for VR/HMD devices.
 
-Press **.** to save a `.pns` (PNG Stereo) file containing left-eye and right-eye views side by side.
+Press **.** to save a `.png` file containing left-eye and right-eye views side by side.
 
 ---
 
 ## Preview
 
-You can view `.pns` files with the **SBS Stereo Viewer**:
+You can view `.png` files with the **SBS Stereo Viewer**:
 
 👉 **[https://azo234.github.io/sbs-stereo-viewer/](https://azo234.github.io/sbs-stereo-viewer/)**
 
@@ -25,8 +25,8 @@ You can view `.pns` files with the **SBS Stereo Viewer**:
 ## Features
 
 - Captures SBS stereo screenshots with **.**
-- Outputs `.pns` (PNG Side-by-Side Stereo) format
-- Saved to `.minecraft/screenshots/stereo/stereo_YYYY-MM-DD_HH.mm.ss.pns`
+- Outputs `.png` format
+- Saved to `.minecraft/screenshots/stereo/stereo_YYYY-MM-DD_HH.mm.ss.png`
 - Configurable parallax (default: 6.5 cm) and output subdirectory
 - HUD-free rendering — ideal for VR/HMD use
 - Supports **NeoForge**, **Fabric**
