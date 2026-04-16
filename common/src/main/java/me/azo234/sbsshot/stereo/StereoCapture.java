@@ -70,12 +70,12 @@ public abstract class StereoCapture {
             sbs.getGraphics().drawImage(left,      0, 0, null);
             sbs.getGraphics().drawImage(rightImg,  w, 0, null);
 
-            // PNG 保存
+            // PNS 保存
             File outDir = new File(mc.gameDirectory, "screenshots/" + config.outputSubDir);
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
             String ts  = LocalDateTime.now().format(DATE_FMT);
-            File   out = new File(outDir, "stereo_" + ts + ".png");
+            File   out = new File(outDir, "stereo_" + ts + ".pns");
 
             try (FileOutputStream fos = new FileOutputStream(out)) {
                 ImageIO.write(sbs, "png", fos);
