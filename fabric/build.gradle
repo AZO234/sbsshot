@@ -1,12 +1,15 @@
 plugins {
-    // Loom 1.15 for Minecraft 26.1 (unobfuscated) / Gradle 9.4+
-    // Plugin ID changed from 'fabric-loom' to 'net.fabricmc.fabric-loom' for 26.1+
-    id 'net.fabricmc.fabric-loom' version '1.15.5'
+    id 'net.fabricmc.fabric-loom'
     id 'java'
 }
 
 version = '1.0.0'
 group = 'me.azo234.sbsshot'
+
+// Output JAR name with MC version
+base {
+    archivesName = "sbsshot-fabric-${mc_ver}"
+}
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -28,13 +31,10 @@ repositories {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:26.1"
-    // mappings line removed: 26.1 is unobfuscated, no remapping needed
-    // modImplementation → implementation for unobfuscated MC (Loom 1.15)
-    implementation "net.fabricmc:fabric-loader:0.18.4"
-    implementation "net.fabricmc.fabric-api:fabric-api:0.144.3+26.1"
-    // ModMenu: optional at compile time
-    compileOnly "com.terraformersmc:modmenu:18.0.0-alpha.6"
+    minecraft "com.mojang:minecraft:${mc_ver}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api}"
+    compileOnly "com.terraformersmc:modmenu:${fabric_modmenu}"
 }
 
 loom {

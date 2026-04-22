@@ -1,11 +1,3 @@
-# .github/workflows/publish.yml
-#
-# GitHub Release を公開したときに自動実行:
-#   1. NeoForge / Fabric × 指定した MC バージョンを行列で並列ビルド
-#   2. Modrinth・CurseForge へのアップロード
-#   3. 全バージョンの成果物をまとめて GitHub Releases へアップロード
-#
-
 name: Publish
 
 on:
@@ -13,23 +5,12 @@ on:
     types: [published]
 
 permissions:
-  contents: write   # GitHub Releases へのアセット添付に必要
+  contents: write
 
 jobs:
-
-  publish-mods:
-    name: Publish ${{ matrix.loader }} (${{ matrix.mc_version }})
+  publish:
+    name: Build and Publish All Versions
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        loader: [neoforge, fabric]
-        mc_version:
-          - "26.1.2"
-          - "26.1.1"
-          - "26.1"
-
     steps:
       - uses: actions/checkout@v4
 
@@ -40,69 +21,47 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Build (${{ matrix.loader }})
-        run: |
-          chmod +x ${{ matrix.loader }}/gradlew
-          cd ${{ matrix.loader }} && ./gradlew build --no-daemon
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Rename JAR for uniqueness
+      - name: Investigate and Build
         run: |
-          # 成果物をリネームして Minecraft バージョンとローダーを明示
-          cd ${{ matrix.loader }}/build/libs
-          find . -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec sh -c 'mv "$1" "$GITHUB_WORKSPACE/sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}.jar"' _ {} \;
+          python3 update_versions.py
+          chmod +x build.sh
+          ./build.sh
 
-      - name: Resolve publish IDs
-        id: ids
+      - name: Prepare Publish Scripts
         run: |
-          if [ "${{ matrix.loader }}" = "neoforge" ]; then
-            echo "modrinth_id=${{ vars.MODRINTH_ID_NEOFORGE }}"   >> "$GITHUB_OUTPUT"
-            echo "curseforge_id=${{ vars.CURSEFORGE_ID_NEOFORGE }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "modrinth_id=${{ vars.MODRINTH_ID_FABRIC }}"     >> "$GITHUB_OUTPUT"
-            echo "curseforge_id=${{ vars.CURSEFORGE_ID_FABRIC }}"  >> "$GITHUB_OUTPUT"
-          fi
+          pip install requests
 
-      - name: Publish to Modrinth/CurseForge (${{ matrix.loader }} / ${{ matrix.mc_version }})
+      - name: Publish to Modrinth (Delete if exists)
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          CHANGELOG: ${{ github.event.release.body }}
+        run: |
+          # PythonスクリプトでModrinthの既存バージョンを削除してから投稿
+          python3 publish_to_modrinth.py
+
+      - name: Publish to CurseForge
         uses: Kir-Antipov/mc-publish@v3.3
         with:
-          modrinth-id:    ${{ steps.ids.outputs.modrinth_id }}
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          modrinth-featured: true
-
-          curseforge-id:    ${{ steps.ids.outputs.curseforge_id }}
+          curseforge-id:  ${{ vars.CURSEFORGE_PROJECT_ID }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-
-          # GitHub へのアップロードはこのジョブでは行わない（衝突回避のため）
-          github-token: ""
-
-          files:        sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}.jar
-          name:         ${{ github.event.release.name }} [${{ matrix.loader == 'neoforge' && 'NeoForge' || 'Fabric' }}]
-          version:      ${{ github.event.release.tag_name }}
+          files: dist/**/*.jar
+          name: "${{ github.event.release.name }}"
+          version: "${{ github.event.release.tag_name }}"
           version-type: release
-          changelog:    ${{ github.event.release.body }}
-          loaders:      ${{ matrix.loader }}
-          game-versions: ${{ matrix.mc_version }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}
-          path: sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}.jar
-          retention-days: 1
-
-  upload-github:
-    name: Upload to GitHub Release
-    needs: publish-mods
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: sbsshot-*
-          merge-multiple: true
+          changelog: "${{ github.event.release.body }}"
+          # 既に存在する場合にジョブを落とさない設定
+          fail-mode: warn
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: sbsshot-*.jar
+          files: dist/**/*.jar
           tag_name: ${{ github.event.release.tag_name }}

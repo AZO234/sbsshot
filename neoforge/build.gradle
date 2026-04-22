@@ -1,11 +1,15 @@
 plugins {
-    // MDG 2.0.141+ required for Minecraft 26.1 / Gradle 9.1+
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev'
     id 'java'
 }
 
 version = '1.0.0'
 group = 'me.azo234.sbsshot'
+
+// Output JAR name with MC version
+base {
+    archivesName = "sbsshot-neoforge-${mc_ver}"
+}
 
 java {
     // Minecraft 26.1 requires Java 25
@@ -23,7 +27,7 @@ sourceSets {
 }
 
 neoForge {
-    version = "26.1.2.7-beta"
+    version = "${neoforge}"
 
     runs {
         client {

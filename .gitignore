@@ -17,6 +17,7 @@ out/
 
 # Mod ビルド成果物
 dist/
+versions.json
 
 # 実行ディレクトリ
 neoforge/run/

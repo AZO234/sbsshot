@@ -1,8 +1,39 @@
+import groovy.json.JsonSlurper
+
 pluginManagement {
+    def versionsFile = file('../versions.json')
+    def versions = new JsonSlurper().parse(versionsFile)
+
+    // ビルド引数 -Pmc_ver が指定されていない場合は、JSONの最初のキーをデフォルトにする
+    def mcVer = settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next()
+    def config = versions[mcVer]
+
+    if (config == null) {
+        throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
+    }
+
+    // 読み込んだ設定をプロジェクトプロパティとして保存（build.gradleで使う用）
+    gradle.settingsEvaluated { settings ->
+        settings.ext.set("mc_ver", mcVer)
+        config.each { key, value ->
+            settings.ext.set(key.replace('-', '_'), value)
+        }
+    }
+
     repositories {
         gradlePluginPortal()
         maven { url = 'https://maven.neoforged.net/releases' }
     }
+
+    plugins {
+        id 'net.neoforged.moddev' version config['neoforge-moddev']
+    }
 }
-// MDG 2.0.141+ requires Gradle 9.1+. This project uses Gradle 9.4.0.
+
 rootProject.name = 'sbsshot-neoforge'
+
+// build.gradle 実行前に、settings.ext からプロジェクトの extra プロパティへコピー
+gradle.rootProject { project ->
+    project.ext.mc_ver = settings.ext.mc_ver
+    project.ext.neoforge = settings.ext.neoforge
+}
