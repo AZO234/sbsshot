@@ -3,20 +3,19 @@ plugins {
     id 'java'
 }
 
-version = '1.0.0'
+// GitHub Actions 等から渡されたタグ名を使用、なければ 1.0.0-dev
+version = project.findProperty('mod_version') ?: '1.0.0-dev'
 group = 'me.azo234.sbsshot'
 
-// Output JAR name with MC version
+// Output JAR name: sbsshot-fabric-26.1.2-1.0.0.jar
 base {
-    archivesName = "sbsshot-fabric-${mc_ver}"
+    archivesName = "sbsshot-fabric-${mc_ver}-${version}"
 }
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
-
-// common/ の Java ソースをこのプロジェクトのコンパイル対象に追加
 sourceSets {
     main {
         java {
@@ -32,16 +31,16 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${mc_ver}"
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api}"
-    modCompileOnly "com.terraformersmc.modmenu:modmenu:${fabric_modmenu}"
+    // MC 26.1+ is unobfuscated, use standard implementation
+    implementation "net.fabricmc:fabric-loader:${fabric_loader}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api}"
+    compileOnly "com.terraformersmc.modmenu:modmenu:${fabric_modmenu}"
 }
 
 loom {
     accessWidenerPath = file("src/main/resources/sbsshot.accesswidener")
 }
 
-// Copy shared assets from common/
 def commonDir = rootProject.file('../common')
 
 processResources {

@@ -3,8 +3,8 @@
 #  SBSShot - Multi-Version Build Script
 #
 #  使い方:
-#    ./build.sh              # versions.json にある全バージョン、全ローダーをビルド
-#    ./build.sh 26.1.2       # 特定の MC バージョンのみ
+#    ./build.sh <mc_ver> <mod_version>
+#    例: ./build.sh 26.1.2 1.0.0
 # =============================================================================
 
 set -euo pipefail
@@ -12,6 +12,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSIONS_JSON="$SCRIPT_DIR/versions.json"
 OUTPUT_DIR="$SCRIPT_DIR/dist"
+
+# 第2引数、または環境変数 MOD_VERSION を使用。なければ '1.0.0-dev'
+MOD_VERSION="${2:-${MOD_VERSION:-1.0.0-dev}}"
 
 # ---- カラー出力 -------------------------------------------------------
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
@@ -21,10 +24,10 @@ error()   { echo -e "${RED}[ERROR]${NC} $*"; }
 divider() { echo -e "${YELLOW}----------------------------------------${NC}"; }
 
 # ---- ターゲットMCバージョン決定 ---------------------------------------
-if [ $# -eq 0 ]; then
+if [ "${1:-}" == "" ]; then
     MC_VERSIONS=$(jq -r 'keys[]' "$VERSIONS_JSON")
 else
-    MC_VERSIONS=("$@")
+    MC_VERSIONS=("$1")
 fi
 
 LOADERS=("fabric" "neoforge")
@@ -36,10 +39,9 @@ SUCCEEDED=()
 
 for mc_ver in $MC_VERSIONS; do
     divider
-    info "Target Minecraft: $mc_ver"
+    info "Target Minecraft: $mc_ver (Mod Version: $MOD_VERSION)"
     divider
 
-    # バージョンごとの出力ディレクトリ
     VER_DIST="$OUTPUT_DIR/$mc_ver"
     mkdir -p "$VER_DIST"
 
@@ -52,10 +54,9 @@ for mc_ver in $MC_VERSIONS; do
             continue
         fi
 
-        # Gradle 実行 (-Pmc_ver を渡す)
-        if (cd "$LOADER_DIR" && ./gradlew build -Pmc_ver="$mc_ver" --console=plain); then
-            # JAR を整理してコピー
-            # build.gradle で archivesName を sbsshot-loader-mcver にしているので、それを探す
+        # Gradle 実行 (-Pmc_ver, -Pmod_version を渡す)
+        if (cd "$LOADER_DIR" && ./gradlew build -Pmc_ver="$mc_ver" -Pmod_version="$MOD_VERSION" --console=plain); then
+            # JAR を整理してコピー (build.gradle でアーカイブ名に含めているため、それを見つける)
             find "$LOADER_DIR/build/libs" -name "*.jar" ! -name "*-sources*" ! -name "*-dev*" ! -name "*-all*" | while read -r jar_file; do
                 cp "$jar_file" "$VER_DIST/"
                 info "Output: dist/$mc_ver/$(basename "$jar_file")"
@@ -70,7 +71,7 @@ done
 
 # ---- サマリー ---------------------------------------------------------
 divider
-info "Multi-Version Build Summary"
+info "Build Summary for Mod Version: $MOD_VERSION"
 divider
 for s in "${SUCCEEDED[@]:-}"; do
     [ -n "$s" ] && echo -e "  ${GREEN}✓${NC}  $s"

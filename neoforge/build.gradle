@@ -3,21 +3,19 @@ plugins {
     id 'java'
 }
 
-version = '1.0.0'
+// GitHub Actions 等から渡されたタグ名を使用、なければ 1.0.0-dev
+version = project.findProperty('mod_version') ?: '1.0.0-dev'
 group = 'me.azo234.sbsshot'
 
-// Output JAR name with MC version
+// Output JAR name: sbsshot-neoforge-26.1.2-1.0.0.jar
 base {
-    archivesName = "sbsshot-neoforge-${mc_ver}"
+    archivesName = "sbsshot-neoforge-${mc_ver}-${version}"
 }
 
 java {
-    // Minecraft 26.1 requires Java 25
     toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
-
-// common/ の Java ソースをこのプロジェクトのコンパイル対象に追加
 sourceSets {
     main {
         java {
@@ -36,7 +34,6 @@ neoForge {
     }
 }
 
-// Copy shared assets from common/
 def commonDir = rootProject.file('../common')
 
 processResources {
