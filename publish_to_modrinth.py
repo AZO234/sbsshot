@@ -72,16 +72,22 @@ def publish():
         "loaders": sorted(list(loaders)),
         "featured": True,
         "project_id": MODRINTH_PROJECT_ID,
-        "version_type": "release"
+        "version_type": "release",
+        "file_parts": list(file_map.keys()),
+        "primary_file": list(file_map.keys())[0] if file_map else None
     }
 
+    # files_to_upload の構成
+    # 各パート名に対応するファイルをタプルで指定
+    # 'data' フィールドは json 形式の文字列で送る
+    payload = {"data": json.dumps(data)}
+    
     # 3. リクエスト送信
-    # multipart/form-data で 'data' フィールドに JSON, 各ファイルフィールドに JAR を入れる
     res = requests.post(
         "https://api.modrinth.com/v2/version",
         headers={"Authorization": MODRINTH_TOKEN},
         files=files_to_upload,
-        data={"data": json.dumps(data)}
+        data=payload
     )
 
     if res.status_code == 200:
