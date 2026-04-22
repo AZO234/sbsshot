@@ -19,19 +19,22 @@ def get_maven_versions(metadata_url):
     tree = ET.fromstring(content)
     return [v.text for v in tree.findall(".//version")]
 
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
+
 def find_latest_match(versions, pattern):
     matches = [v for v in versions if re.search(pattern, v)]
-    return matches[-1] if matches else None
+    if not matches: return None
+    matches.sort(key=natural_sort_key)
+    return matches[-1]
 
 def is_stable_mc(ver):
-    # 数字とドットのみ（例: 26.1.2）で、26.1から始まるもの
     return bool(re.match(r"^26\.1(\.\d+)?$", ver))
 
 def update():
     print("Fetching Minecraft versions from Fabric Meta...")
     try:
         mc_versions_data = get_json("https://meta.fabricmc.net/v2/versions/game")
-        # 安定版のみを抽出
         mc_versions = [v["version"] for v in mc_versions_data if is_stable_mc(v["version"])]
         mc_versions = sorted(list(set(mc_versions)))
     except Exception as e:
@@ -44,19 +47,22 @@ def update():
 
     print(f"Targeting Minecraft versions: {mc_versions}")
 
-    # 共通の最新版を取得
     print("Fetching common dependency versions...")
     try:
         fabric_loader = get_json("https://meta.fabricmc.net/v2/versions/loader")[0]["version"]
         
-        # Loom の最新版を Maven から取得
         loom_versions = get_maven_versions("https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml")
         fabric_loom = find_latest_match(loom_versions, r"^1\.16.*") or "1.16-SNAPSHOT"
         
-        modmenu_versions = get_maven_versions("https://maven.terraformersmc.com/releases/com/terraformersmc/modmenu/maven-metadata.xml")
-        latest_modmenu = modmenu_versions[-1]
+        # Correct path and URL for ModMenu
+        try:
+            modmenu_versions = get_maven_versions("https://maven.terraformersmc.com/com/terraformersmc/modmenu/modmenu/maven-metadata.xml")
+            latest_modmenu = find_latest_match(modmenu_versions, r"^18\..*") or find_latest_match(modmenu_versions, r".*")
+        except:
+            latest_modmenu = "18.0.0-alpha.8"
         
         mdg_versions = get_maven_versions("https://plugins.gradle.org/m2/net/neoforged/moddev/net.neoforged.moddev.gradle.plugin/maven-metadata.xml")
+        mdg_versions.sort(key=natural_sort_key)
         latest_mdg = mdg_versions[-1]
 
         fapi_versions = get_maven_versions("https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml")
@@ -69,11 +75,7 @@ def update():
 
     for mc in mc_versions:
         print(f"Processing MC {mc}...")
-        
-        # Fabric API
         fapi = find_latest_match(fapi_versions, re.escape(mc))
-        
-        # NeoForge
         nf = find_latest_match(nf_versions, f"^{re.escape(mc)}\\.")
 
         if fapi and nf:
@@ -85,7 +87,7 @@ def update():
                 "neoforge": nf,
                 "neoforge-moddev": latest_mdg
             }
-            print(f"  -> Found dependencies for {mc}")
+            print(f"  -> Found dependencies for {mc} (ModMenu: {latest_modmenu})")
         else:
             if not fapi: print(f"  -> [Warn] No Fabric API found for {mc}")
             if not nf: print(f"  -> [Warn] No NeoForge version found for {mc}")
