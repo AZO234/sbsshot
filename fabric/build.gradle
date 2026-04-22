@@ -31,11 +31,11 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${mc_ver}"
-    // MC 26.1+ is unobfuscated, use standard implementation
     implementation "net.fabricmc:fabric-loader:${fabric_loader}"
     implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api}"
-    compileOnly "com.terraformersmc.modmenu:modmenu:${fabric_modmenu}"
+    modCompileOnly "com.terraformersmc:modmenu:${fabric_modmenu}"
 }
+
 
 loom {
     accessWidenerPath = file("src/main/resources/sbsshot.accesswidener")

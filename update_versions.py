@@ -54,9 +54,9 @@ def update():
         loom_versions = get_maven_versions("https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml")
         fabric_loom = find_latest_match(loom_versions, r"^1\.16.*") or "1.16-SNAPSHOT"
         
-        # Correct path and URL for ModMenu
+        # Correct path for ModMenu (group com.terraformersmc, artifact modmenu)
         try:
-            modmenu_versions = get_maven_versions("https://maven.terraformersmc.com/com/terraformersmc/modmenu/modmenu/maven-metadata.xml")
+            modmenu_versions = get_maven_versions("https://maven.terraformersmc.com/com/terraformersmc/modmenu/maven-metadata.xml")
             latest_modmenu = find_latest_match(modmenu_versions, r"^18\..*") or find_latest_match(modmenu_versions, r".*")
         except:
             latest_modmenu = "18.0.0-alpha.8"
