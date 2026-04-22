@@ -35,6 +35,7 @@ fi
 LOADERS=("fabric" "neoforge")
 
 # ---- ビルド実行 -------------------------------------------------------
+rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 FAILED=()
 SUCCEEDED=()
@@ -57,7 +58,8 @@ for mc_ver in $MC_VERSIONS; do
         fi
 
         # Gradle 実行 (-Pmc_ver, -Pmod_version を渡す)
-        if (cd "$LOADER_DIR" && ./gradlew build -Pmc_ver="$mc_ver" -Pmod_version="$MOD_VERSION" --console=plain); then
+        # 毎回 clean することで、別の MC バージョンの JAR が build/libs に残るのを防ぐ
+        if (cd "$LOADER_DIR" && ./gradlew clean build -Pmc_ver="$mc_ver" -Pmod_version="$MOD_VERSION" --console=plain); then
             # JAR を整理してコピー
             find "$LOADER_DIR/build/libs" -name "*.jar" ! -name "*-sources*" ! -name "*-dev*" ! -name "*-all*" | while read -r jar_file; do
                 cp "$jar_file" "$VER_DIST/"

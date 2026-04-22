@@ -5,16 +5,29 @@ import requests
 import time
 
 # 設定
-MODRINTH_TOKEN = os.environ.get("MODRINTH_TOKEN")
-MODRINTH_PROJECT_ID = os.environ.get("MODRINTH_PROJECT_ID")
+MODRINTH_TOKEN = os.environ.get("MODRINTH_TOKEN", "").strip()
+MODRINTH_PROJECT_ID = os.environ.get("MODRINTH_PROJECT_ID", "").strip()
 
-TAG_NAME = os.environ.get("TAG_NAME")
-RELEASE_NAME = os.environ.get("RELEASE_NAME")
-CHANGELOG = os.environ.get("CHANGELOG")
+TAG_NAME = os.environ.get("TAG_NAME", "").strip()
+RELEASE_NAME = os.environ.get("RELEASE_NAME", "").strip()
+CHANGELOG = os.environ.get("CHANGELOG", "").strip()
 
 def publish():
     print(f"--- Modrinth Publish: {TAG_NAME} ---")
-    headers = {"Authorization": MODRINTH_TOKEN}
+    
+    if not MODRINTH_TOKEN:
+        print("Error: MODRINTH_TOKEN is not set.")
+        return
+    if not MODRINTH_PROJECT_ID:
+        print("Error: MODRINTH_PROJECT_ID is not set.")
+        return
+
+    # Bearer プレフィックスの付与 (既にある場合はそのまま)
+    auth_header = MODRINTH_TOKEN
+    if not auth_header.startswith("Bearer "):
+        auth_header = f"Bearer {auth_header}"
+    
+    headers = {"Authorization": auth_header}
     
     # 0. プロジェクト情報の取得 (スラッグから正式なIDを取得)
     res = requests.get(f"https://api.modrinth.com/v2/project/{MODRINTH_PROJECT_ID}", headers=headers)
@@ -24,7 +37,8 @@ def publish():
         print(f"Project found: {project_data['title']} (ID: {actual_project_id})")
     else:
         print(f"Failed to fetch project info for '{MODRINTH_PROJECT_ID}' (status: {res.status_code})")
-        print("Please check if MODRINTH_PROJECT_ID and MODRINTH_TOKEN are correct.")
+        print(f"Response: {res.text}")
+        print("Please check if MODRINTH_PROJECT_ID is correct and MODRINTH_TOKEN has access to this project.")
         return
 
     # 1. 既存バージョンの検索
@@ -95,7 +109,7 @@ def publish():
     # 3. リクエスト送信
     res = requests.post(
         "https://api.modrinth.com/v2/version",
-        headers={"Authorization": MODRINTH_TOKEN},
+        headers=headers,
         files=files_to_upload,
         data=payload
     )
