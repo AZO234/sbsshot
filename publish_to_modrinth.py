@@ -16,9 +16,20 @@ def publish():
     print(f"--- Modrinth Publish: {TAG_NAME} ---")
     headers = {"Authorization": MODRINTH_TOKEN}
     
+    # 0. プロジェクト情報の取得 (スラッグから正式なIDを取得)
+    res = requests.get(f"https://api.modrinth.com/v2/project/{MODRINTH_PROJECT_ID}", headers=headers)
+    if res.status_code == 200:
+        project_data = res.json()
+        actual_project_id = project_data["id"]
+        print(f"Project found: {project_data['title']} (ID: {actual_project_id})")
+    else:
+        print(f"Failed to fetch project info for '{MODRINTH_PROJECT_ID}' (status: {res.status_code})")
+        print("Please check if MODRINTH_PROJECT_ID and MODRINTH_TOKEN are correct.")
+        return
+
     # 1. 既存バージョンの検索
     # プロジェクトの全バージョンを取得
-    res = requests.get(f"https://api.modrinth.com/v2/project/{MODRINTH_PROJECT_ID}/version", headers=headers)
+    res = requests.get(f"https://api.modrinth.com/v2/project/{actual_project_id}/version", headers=headers)
     if res.status_code == 200:
         versions = res.json()
         for v in versions:
@@ -29,7 +40,7 @@ def publish():
     else:
         print(f"Failed to fetch versions (status: {res.status_code})")
 
-    # 2. アップロード準備
+    # (中略: JARファイルの検索部分は変更なし)
     jar_files = glob.glob("dist/**/*.jar", recursive=True)
     if not jar_files:
         print("No JAR files found to upload!")
@@ -48,7 +59,6 @@ def publish():
     for i, path in enumerate(jar_files):
         filename = os.path.basename(path)
         loader = "fabric" if "fabric" in filename.lower() else "neoforge"
-        # ディレクトリ名からMCバージョンを取得 (dist/26.1.2/sbsshot-fabric-26.1.2.jar -> 26.1.2)
         mc_ver = os.path.basename(os.path.dirname(path))
         
         game_versions.add(mc_ver)
@@ -71,7 +81,7 @@ def publish():
         "game_versions": sorted(list(game_versions)),
         "loaders": sorted(list(loaders)),
         "featured": True,
-        "project_id": MODRINTH_PROJECT_ID,
+        "project_id": actual_project_id,
         "version_type": "release",
         "file_parts": list(file_map.keys()),
         "primary_file": list(file_map.keys())[0] if file_map else None
