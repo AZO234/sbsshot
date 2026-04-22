@@ -22,37 +22,46 @@ def publish():
         print("Error: MODRINTH_PROJECT_ID is not set.")
         return
 
-    # Bearer プレフィックスの付与 (既にある場合はそのまま)
-    auth_header = MODRINTH_TOKEN
-    if not auth_header.startswith("Bearer "):
-        auth_header = f"Bearer {auth_header}"
+    # Modrinth API は Bearer なしのトークンを直接受け取ることが多い
+    # ユーザーが Bearer を付けて設定している可能性も考慮
+    raw_token = MODRINTH_TOKEN.replace("Bearer ", "").strip()
+    headers = {"Authorization": raw_token}
     
-    headers = {"Authorization": auth_header}
+    # 0. プロジェクト情報の取得
+    # まずはトークンなしでパブリックな情報を試行 (IDが正しいか確認)
+    print(f"Checking project info for '{MODRINTH_PROJECT_ID}'...")
+    res = requests.get(f"https://api.modrinth.com/v2/project/{MODRINTH_PROJECT_ID}")
     
-    # 0. プロジェクト情報の取得 (スラッグから正式なIDを取得)
-    res = requests.get(f"https://api.modrinth.com/v2/project/{MODRINTH_PROJECT_ID}", headers=headers)
+    if res.status_code != 200:
+        # パブリックで見つからない場合はトークン付きで再試行 (プライベートプロジェクトの場合)
+        res = requests.get(f"https://api.modrinth.com/v2/project/{MODRINTH_PROJECT_ID}", headers=headers)
+
     if res.status_code == 200:
         project_data = res.json()
         actual_project_id = project_data["id"]
         print(f"Project found: {project_data['title']} (ID: {actual_project_id})")
     else:
-        print(f"Failed to fetch project info for '{MODRINTH_PROJECT_ID}' (status: {res.status_code})")
+        print(f"Failed to fetch project info (status: {res.status_code})")
         print(f"Response: {res.text}")
-        print("Please check if MODRINTH_PROJECT_ID is correct and MODRINTH_TOKEN has access to this project.")
+        print("Possible reasons:")
+        print(f"1. Project ID/Slug '{MODRINTH_PROJECT_ID}' is incorrect.")
+        print("2. Project is private/unlisted and the token does not have access.")
+        print("3. The token is invalid.")
         return
 
     # 1. 既存バージョンの検索
-    # プロジェクトの全バージョンを取得
     res = requests.get(f"https://api.modrinth.com/v2/project/{actual_project_id}/version", headers=headers)
     if res.status_code == 200:
         versions = res.json()
         for v in versions:
             if v["version_number"] == TAG_NAME:
                 print(f"Found existing version '{TAG_NAME}' (ID: {v['id']}). Deleting...")
-                requests.delete(f"https://api.modrinth.com/v2/version/{v['id']}", headers=headers)
-                time.sleep(2) # 削除反映待ち
+                del_res = requests.delete(f"https://api.modrinth.com/v2/version/{v['id']}", headers=headers)
+                if del_res.status_code != 204:
+                    print(f"Warning: Failed to delete version (status: {del_res.status_code})")
+                time.sleep(2)
     else:
-        print(f"Failed to fetch versions (status: {res.status_code})")
+        print(f"Note: Could not fetch existing versions (status: {res.status_code}). Proceeding anyway.")
 
     # (中略: JARファイルの検索部分は変更なし)
     jar_files = glob.glob("dist/**/*.jar", recursive=True)
