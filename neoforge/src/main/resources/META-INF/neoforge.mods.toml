@@ -7,7 +7,7 @@ modId="sbsshot"
 version="${version}"
 displayName="SBSShot"
 logoFile="pack.png"
-description="VR/HMD向けのステレオ立体画像形式（.pns）でスクリーンショットします。"
+description="VR/HMD向けのステレオ立体画像をスクリーンショットします。"
 
 [[dependencies.sbsshot]]
     modId="neoforge"

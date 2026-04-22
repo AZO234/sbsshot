@@ -3,7 +3,7 @@
   "id": "sbsshot",
   "version": "${version}",
   "name": "SBSShot",
-  "description": "VR/HMD向けのステレオ立体画像形式（.pns）でスクリーンショットします。",
+  "description": "VR/HMD向けのステレオ立体画像をスクリーンショットします。",
   "license": "MIT",
   "icon": "pack.png",
   "entrypoints": {
@@ -20,7 +20,7 @@
   "depends": {
     "fabricloader": ">=0.19.1",
     "fabric-api": "*",
-    "minecraft": ">=${mc_ver}"
+    "minecraft": "~${mc_ver}"
   },
   "accessWidener": "sbsshot.accesswidener",
   "suggests": {

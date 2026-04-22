@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
  * ステレオ撮影の共通ロジック。
  *
  * カメラオフセットは各ローダーのサブクラスで実装する。
- * このクラスは撮影フロー・FBO からのフレームバッファ読み取り・PNS 保存を担当する。
+ * このクラスは撮影フロー・FBO からのフレームバッファ読み取り・SBS PNG 保存を担当する。
  *
  * 26.1 の変更点:
  *   - renderLevel() は mainRenderTarget (FBO) に描画する（画面バッファではない）
@@ -70,12 +70,12 @@ public abstract class StereoCapture {
             sbs.getGraphics().drawImage(left,      0, 0, null);
             sbs.getGraphics().drawImage(rightImg,  w, 0, null);
 
-            // PNS 保存
+            // PNG 保存
             File outDir = new File(mc.gameDirectory, "screenshots/" + config.outputSubDir);
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
             String ts  = LocalDateTime.now().format(DATE_FMT);
-            File   out = new File(outDir, "stereo_" + ts + ".pns");
+            File   out = new File(outDir, "stereo_" + ts + ".png");
 
             try (FileOutputStream fos = new FileOutputStream(out)) {
                 ImageIO.write(sbs, "png", fos);
