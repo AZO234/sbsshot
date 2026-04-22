@@ -48,7 +48,10 @@ def update():
     print("Fetching common dependency versions...")
     try:
         fabric_loader = get_json("https://meta.fabricmc.net/v2/versions/loader")[0]["version"]
-        fabric_loom = "1.16"
+        
+        # Loom の最新版を Maven から取得
+        loom_versions = get_maven_versions("https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml")
+        fabric_loom = find_latest_match(loom_versions, r"^1\.16.*") or "1.16-SNAPSHOT"
         
         modmenu_versions = get_maven_versions("https://maven.terraformersmc.com/releases/com/terraformersmc/modmenu/maven-metadata.xml")
         latest_modmenu = modmenu_versions[-1]

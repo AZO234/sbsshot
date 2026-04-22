@@ -1,39 +1,36 @@
 import groovy.json.JsonSlurper
 
+def versionsFile = file('../versions.json')
+def versions = new JsonSlurper().parse(versionsFile)
+
+// ビルド引数 -Pmc_ver を確実に取得
+def mcVer = startParameter.projectProperties['mc_ver'] ?: (settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next())
+def config = versions[mcVer]
+
+if (config == null) {
+    throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
+}
+
 pluginManagement {
-    def versionsFile = file('../versions.json')
-    def versions = new JsonSlurper().parse(versionsFile)
-
-    // ビルド引数 -Pmc_ver が指定されていない場合は、JSONの最初のキーをデフォルトにする
-    def mcVer = settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next()
-    def config = versions[mcVer]
-
-    if (config == null) {
-        throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
-    }
-
-    // 読み込んだ設定をプロジェクトプロパティとして保存（build.gradleで使う用）
-    gradle.settingsEvaluated { settings ->
-        settings.ext.set("mc_ver", mcVer)
-        config.each { key, value ->
-            settings.ext.set(key.replace('-', '_'), value)
-        }
-    }
-
     repositories {
         gradlePluginPortal()
         maven { url = 'https://maven.neoforged.net/releases' }
     }
-
-    plugins {
-        id 'net.neoforged.moddev' version config['neoforge-moddev']
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'net.neoforged.moddev') {
+                useVersion(config['neoforge-moddev'])
+            }
+        }
     }
 }
 
 rootProject.name = 'sbsshot-neoforge'
 
-// build.gradle 実行前に、settings.ext からプロジェクトの extra プロパティへコピー
-gradle.rootProject { project ->
-    project.ext.mc_ver = settings.ext.mc_ver
-    project.ext.neoforge = settings.ext.neoforge
+// build.gradle でプロパティを使えるようにする
+gradle.beforeProject { project ->
+    project.ext.mc_ver = mcVer
+    config.each { k, v ->
+        project.ext.set(k.replace('-', '_'), v)
+    }
 }

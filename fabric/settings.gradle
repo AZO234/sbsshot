@@ -1,42 +1,37 @@
 import groovy.json.JsonSlurper
 
+def versionsFile = file('../versions.json')
+def versions = new JsonSlurper().parse(versionsFile)
+
+// ビルド引数 -Pmc_ver を確実に取得
+def mcVer = startParameter.projectProperties['mc_ver'] ?: (settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next())
+def config = versions[mcVer]
+
+if (config == null) {
+    throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
+}
+
 pluginManagement {
-    def versionsFile = file('../versions.json')
-    def versions = new JsonSlurper().parse(versionsFile)
-
-    // ビルド引数 -Pmc_ver が指定されていない場合は、JSONの最初のキーをデフォルトにする
-    def mcVer = settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next()
-    def config = versions[mcVer]
-
-    if (config == null) {
-        throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
-    }
-
-    // 読み込んだ設定をプロジェクトプロパティとして保存（build.gradleで使う用）
-    gradle.settingsEvaluated { settings ->
-        settings.ext.set("mc_ver", mcVer)
-        config.each { key, value ->
-            settings.ext.set(key.replace('-', '_'), value)
-        }
-    }
-
     repositories {
         maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.terraformersmc.com/releases/' }
         gradlePluginPortal()
     }
-
-    plugins {
-        id 'net.fabricmc.fabric-loom' version config['fabric-loom']
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'net.fabricmc.fabric-loom') {
+                useVersion(config['fabric-loom'])
+            }
+        }
     }
 }
 
 rootProject.name = 'sbsshot-fabric'
 
-// build.gradle 実行前に、settings.ext からプロジェクトの extra プロパティへコピー
-gradle.rootProject { project ->
-    project.ext.mc_ver = settings.ext.mc_ver
-    project.ext.fabric_loom = settings.ext.fabric_loom
-    project.ext.fabric_loader = settings.ext.fabric_loader
-    project.ext.fabric_api = settings.ext.fabric_api
-    project.ext.fabric_modmenu = settings.ext.fabric_modmenu
+// build.gradle でプロパティを使えるようにする
+gradle.beforeProject { project ->
+    project.ext.mc_ver = mcVer
+    config.each { k, v ->
+        project.ext.set(k.replace('-', '_'), v)
+    }
 }
