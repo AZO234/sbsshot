@@ -33,7 +33,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${mc_ver}"
     implementation "net.fabricmc:fabric-loader:${fabric_loader}"
     implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api}"
-    modCompileOnly "com.terraformersmc:modmenu:${fabric_modmenu}"
+    compileOnly "com.terraformersmc:modmenu:${fabric_modmenu}"
 }
 
 
