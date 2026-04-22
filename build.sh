@@ -14,7 +14,9 @@ VERSIONS_JSON="$SCRIPT_DIR/versions.json"
 OUTPUT_DIR="$SCRIPT_DIR/dist"
 
 # 第2引数、または環境変数 MOD_VERSION を使用。なければ '1.0.0-dev'
-MOD_VERSION="${2:-${MOD_VERSION:-1.0.0-dev}}"
+RAW_VERSION="${2:-${MOD_VERSION:-1.0.0-dev}}"
+# 'v' プレフィックスを除去 (v1.0.2 -> 1.0.2)
+MOD_VERSION="${RAW_VERSION#v}"
 
 # ---- カラー出力 -------------------------------------------------------
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
