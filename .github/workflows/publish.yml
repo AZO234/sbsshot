@@ -28,9 +28,12 @@ jobs:
 
       - name: Investigate and Build
         run: |
+          # 1. Minecraft 26.1以上のリリースを調査 & JSON更新
           python3 update_versions.py
+          
+          # 2. Micecraftバージョン(all) + タグ名を引数に渡してビルド
           chmod +x build.sh
-          ./build.sh
+          ./build.sh all "${{ github.event.release.tag_name }}"
 
       - name: Prepare Publish Scripts
         run: |
