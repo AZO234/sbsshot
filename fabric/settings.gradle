@@ -1,17 +1,15 @@
 import groovy.json.JsonSlurper
 
-def versionsFile = file('../versions.json')
-def versions = new JsonSlurper().parse(versionsFile)
-
-// ビルド引数 -Pmc_ver を確実に取得
-def mcVer = startParameter.projectProperties['mc_ver'] ?: (settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next())
-def config = versions[mcVer]
-
-if (config == null) {
-    throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
-}
-
 pluginManagement {
+    def versionsFile = file('../versions.json')
+    def versions = new JsonSlurper().parse(versionsFile)
+    def mcVer = startParameter.projectProperties['mc_ver'] ?: (settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next())
+    def config = versions[mcVer]
+
+    if (config == null) {
+        throw new GradleException("Minecraft version '${mcVer}' not found in versions.json")
+    }
+
     repositories {
         maven { url = 'https://maven.fabricmc.net/' }
         maven { url = 'https://maven.terraformersmc.com/releases/' }
@@ -26,12 +24,17 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'sbsshot-fabric'
+// プロジェクトプロパティへの展開
+def versionsFile = file('../versions.json')
+def versions = new JsonSlurper().parse(versionsFile)
+def mcVer = startParameter.projectProperties['mc_ver'] ?: (settings.hasProperty('mc_ver') ? settings.getProperty('mc_ver') : versions.keySet().iterator().next())
+def config = versions[mcVer]
 
-// build.gradle でプロパティを使えるようにする
 gradle.beforeProject { project ->
     project.ext.mc_ver = mcVer
     config.each { k, v ->
         project.ext.set(k.replace('-', '_'), v)
     }
 }
+
+rootProject.name = 'sbsshot-fabric'
