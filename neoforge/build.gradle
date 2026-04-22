@@ -37,6 +37,16 @@ neoForge {
 def commonDir = rootProject.file('../common')
 
 processResources {
+    def replaceProperties = [
+            version: version,
+            mc_ver: mc_ver
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+
     from("${commonDir}/assets") { into('assets') }
     from("${commonDir}/pack.png") { into('.') }
 }

@@ -4,7 +4,7 @@ license="MIT"
 
 [[mods]]
 modId="sbsshot"
-version="1.0.0"
+version="${version}"
 displayName="SBSShot"
 logoFile="pack.png"
 description="VR/HMD向けのステレオ立体画像形式（.pns）でスクリーンショットします。"
@@ -12,13 +12,13 @@ description="VR/HMD向けのステレオ立体画像形式（.pns）でスクリ
 [[dependencies.sbsshot]]
     modId="neoforge"
     type="required"
-    versionRange="[26.1,)"
+    versionRange="[${mc_ver},)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.sbsshot]]
     modId="minecraft"
     type="required"
-    versionRange="[26.1,)"
+    versionRange="[${mc_ver},)"
     ordering="NONE"
     side="BOTH"
