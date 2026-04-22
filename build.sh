@@ -13,8 +13,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSIONS_JSON="$SCRIPT_DIR/versions.json"
 OUTPUT_DIR="$SCRIPT_DIR/dist"
 
-# 第2引数、または環境変数 MOD_VERSION を使用。なければ '1.0.0-dev'
-RAW_VERSION="${2:-${MOD_VERSION:-1.0.0-dev}}"
+# 環境変数 MOD_VERSION を最優先、なければ第2引数。それもなければ '1.0.0-dev'
+RAW_VERSION="${MOD_VERSION:-${2:-1.0.0-dev}}"
 # 'v' プレフィックスを除去 (v1.0.2 -> 1.0.2)
 MOD_VERSION="${RAW_VERSION#v}"
 
