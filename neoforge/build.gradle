@@ -9,7 +9,7 @@ group = 'me.azo234.sbsshot'
 
 // Output JAR name: sbsshot-neoforge-26.1.2-1.0.0.jar
 base {
-    archivesName = "sbsshot-neoforge-${mc_ver}-${version}"
+    archivesName = "sbsshot-neoforge-${mc_ver}"
 }
 
 java {
