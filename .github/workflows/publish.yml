@@ -2,17 +2,9 @@
 #
 # GitHub Release を公開したときに自動実行:
 #   1. NeoForge / Fabric × 指定した MC バージョンを行列で並列ビルド
-#   2. Modrinth・CurseForge・GitHub Releases へアップロード
+#   2. Modrinth・CurseForge へのアップロード
+#   3. 全バージョンの成果物をまとめて GitHub Releases へアップロード
 #
-# 必要な Repository Secrets (Settings → Secrets → Actions):
-#   MODRINTH_TOKEN   : Modrinth のユーザー設定 → API トークン
-#   CURSEFORGE_TOKEN : CurseForge の API キー
-#
-# 必要な Repository Variables (Settings → Variables → Actions):
-#   MODRINTH_ID_NEOFORGE   : Modrinth の NeoForge プロジェクト ID
-#   MODRINTH_ID_FABRIC     : Modrinth の Fabric プロジェクト ID
-#   CURSEFORGE_ID_NEOFORGE : CurseForge の NeoForge プロジェクト ID
-#   CURSEFORGE_ID_FABRIC   : CurseForge の Fabric プロジェクト ID
 
 name: Publish
 
@@ -25,7 +17,7 @@ permissions:
 
 jobs:
 
-  publish:
+  publish-mods:
     name: Publish ${{ matrix.loader }} (${{ matrix.mc_version }})
     runs-on: ubuntu-latest
 
@@ -53,6 +45,12 @@ jobs:
           chmod +x ${{ matrix.loader }}/gradlew
           cd ${{ matrix.loader }} && ./gradlew build --no-daemon
 
+      - name: Rename JAR for uniqueness
+        run: |
+          # 成果物をリネームして Minecraft バージョンとローダーを明示
+          cd ${{ matrix.loader }}/build/libs
+          find . -name "*.jar" ! -name "*-dev.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec sh -c 'mv "$1" "$GITHUB_WORKSPACE/sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}.jar"' _ {} \;
+
       - name: Resolve publish IDs
         id: ids
         run: |
@@ -64,7 +62,7 @@ jobs:
             echo "curseforge_id=${{ vars.CURSEFORGE_ID_FABRIC }}"  >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish (${{ matrix.loader }} / ${{ matrix.mc_version }})
+      - name: Publish to Modrinth/CurseForge (${{ matrix.loader }} / ${{ matrix.mc_version }})
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id:    ${{ steps.ids.outputs.modrinth_id }}
@@ -74,14 +72,37 @@ jobs:
           curseforge-id:    ${{ steps.ids.outputs.curseforge_id }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
-          # GitHub Releases へのアセット添付は mc_version ごとに重複しないよう
-          # 行列の最初のバージョンのみで行う
-          github-token: ${{ matrix.mc_version == '1.21.5' && secrets.GITHUB_TOKEN || '' }}
+          # GitHub へのアップロードはこのジョブでは行わない（衝突回避のため）
+          github-token: ""
 
-          files:        ${{ matrix.loader }}/build/libs/!(*-@(dev|sources|javadoc)).jar
+          files:        sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}.jar
           name:         ${{ github.event.release.name }} [${{ matrix.loader == 'neoforge' && 'NeoForge' || 'Fabric' }}]
           version:      ${{ github.event.release.tag_name }}
           version-type: release
           changelog:    ${{ github.event.release.body }}
           loaders:      ${{ matrix.loader }}
           game-versions: ${{ matrix.mc_version }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}
+          path: sbsshot-${{ matrix.loader }}-${{ matrix.mc_version }}.jar
+          retention-days: 1
+
+  upload-github:
+    name: Upload to GitHub Release
+    needs: publish-mods
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sbsshot-*
+          merge-multiple: true
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: sbsshot-*.jar
+          tag_name: ${{ github.event.release.tag_name }}
