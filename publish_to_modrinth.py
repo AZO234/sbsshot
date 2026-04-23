@@ -65,6 +65,9 @@ def publish():
 
     # (中略: JARファイルの検索部分は変更なし)
     jar_files = glob.glob("dist/**/*.jar", recursive=True)
+    # sources, dev, common などの JAR を除外
+    jar_files = [f for f in jar_files if not any(x in os.path.basename(f).lower() for x in ["sources", "dev", "common"])]
+    
     if not jar_files:
         print("No JAR files found to upload!")
         return
