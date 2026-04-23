@@ -98,7 +98,9 @@ def publish():
         file_map[part_name] = {
             "hashes": {},
             "file_type": "featured-release",
-            "primary": i == 0
+            "primary": i == 0,
+            "loaders": [loader],
+            "game_versions": [mc_ver]
         }
 
     # Modrinth API の要求する JSON データ
@@ -114,9 +116,14 @@ def publish():
         "version_type": "release",
         "client_side": "required",
         "server_side": "unsupported",
-        "file_parts": list(file_map.keys()),
+        "files": [file_map[name] for name in file_map], # file_parts ではなく files
         "primary_file": list(file_map.keys())[0] if file_map else None
     }
+
+    # data 内の各ファイル情報にパーツ名を紐付ける必要がある場合がある
+    # Modrinth API の multipart 仕様に合わせる
+    for i, part_name in enumerate(file_map.keys()):
+        data["files"][i]["request_file"] = part_name
 
     # files_to_upload の構成
     # 各パート名に対応するファイルをタプルで指定
