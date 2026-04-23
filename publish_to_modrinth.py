@@ -59,7 +59,8 @@ def publish():
                 del_res = requests.delete(f"https://api.modrinth.com/v2/version/{v['id']}", headers=headers)
                 if del_res.status_code != 204:
                     print(f"Warning: Failed to delete version (status: {del_res.status_code})")
-                time.sleep(2)
+                print("Waiting 5 seconds for backend synchronization...")
+                time.sleep(5)
     else:
         print(f"Note: Could not fetch existing versions (status: {res.status_code}). Proceeding anyway.")
 
@@ -72,7 +73,9 @@ def publish():
         print("No JAR files found to upload!")
         return
 
-    print(f"Found {len(jar_files)} JAR files to upload.")
+    print(f"Found {len(jar_files)} JAR files to upload:")
+    for f in jar_files:
+        print(f"  - {f}")
 
     # バージョン情報 (game_versions, loaders 等を自動収集)
     game_versions = set()
