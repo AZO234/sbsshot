@@ -48,50 +48,42 @@ public abstract class StereoCapture {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
-        boolean wasPaused = mc.isPaused();
-        if (!wasPaused) mc.pauseGame(false);
+        // プレイヤーの向きから右方向ベクトルを計算
+        float yaw = mc.player.getYRot();
+        double[] right = yawToRight(yaw);
 
-        try {
-            // プレイヤーの向きから右方向ベクトルを計算
-            float yaw = mc.player.getYRot();
-            double[] right = yawToRight(yaw);
+        float offsetL = config.cameraOffsetBlocks(0);  // 負（左目）
+        float offsetR = config.cameraOffsetBlocks(1);  // 正（右目）
 
-            float offsetL = config.cameraOffsetBlocks(0);  // 負（左目）
-            float offsetR = config.cameraOffsetBlocks(1);  // 正（右目）
+        BufferedImage left    = renderWithOffset(mc, right[0], right[2], offsetL);
+        BufferedImage rightImg = renderWithOffset(mc, right[0], right[2], offsetR);
 
-            BufferedImage left    = renderWithOffset(mc, right[0], right[2], offsetL);
-            BufferedImage rightImg = renderWithOffset(mc, right[0], right[2], offsetR);
+        if (left == null || rightImg == null) return;
 
-            if (left == null || rightImg == null) return;
+        // SBS 結合（左 | 右）
+        int w = left.getWidth(), h = left.getHeight();
+        BufferedImage sbs = new BufferedImage(w * 2, h, BufferedImage.TYPE_INT_RGB);
+        sbs.getGraphics().drawImage(left,      0, 0, null);
+        sbs.getGraphics().drawImage(rightImg,  w, 0, null);
 
-            // SBS 結合（左 | 右）
-            int w = left.getWidth(), h = left.getHeight();
-            BufferedImage sbs = new BufferedImage(w * 2, h, BufferedImage.TYPE_INT_RGB);
-            sbs.getGraphics().drawImage(left,      0, 0, null);
-            sbs.getGraphics().drawImage(rightImg,  w, 0, null);
+        // PNG 保存
+        File outDir = new File(mc.gameDirectory, "screenshots/" + config.outputSubDir);
+        //noinspection ResultOfMethodCallIgnored
+        outDir.mkdirs();
+        String ts  = LocalDateTime.now().format(DATE_FMT);
+        File   out = new File(outDir, "stereo_" + ts + ".png");
 
-            // PNG 保存
-            File outDir = new File(mc.gameDirectory, "screenshots/" + config.outputSubDir);
-            //noinspection ResultOfMethodCallIgnored
-            outDir.mkdirs();
-            String ts  = LocalDateTime.now().format(DATE_FMT);
-            File   out = new File(outDir, "stereo_" + ts + ".png");
-
-            try (FileOutputStream fos = new FileOutputStream(out)) {
-                ImageIO.write(sbs, "png", fos);
-            } catch (IOException e) {
-                e.printStackTrace();
-                out = null;
-            }
-
-            Component msg = out != null
-                    ? Component.translatable("sbsshot.stereo.saved", out.getName())
-                    : Component.translatable("sbsshot.stereo.failed");
-            sendMessage(mc, msg);
-
-        } finally {
-            if (!wasPaused) mc.pauseGame(false);
+        try (FileOutputStream fos = new FileOutputStream(out)) {
+            ImageIO.write(sbs, "png", fos);
+        } catch (IOException e) {
+            e.printStackTrace();
+            out = null;
         }
+
+        Component msg = out != null
+                ? Component.translatable("sbsshot.stereo.saved", out.getName())
+                : Component.translatable("sbsshot.stereo.failed");
+        sendMessage(mc, msg);
     }
 
     protected static BufferedImage readFramebuffer(Minecraft mc) {
