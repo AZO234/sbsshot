@@ -106,6 +106,8 @@ def publish():
         "featured": True,
         "project_id": actual_project_id,
         "version_type": "release",
+        "client_side": "required",
+        "server_side": "unsupported",
         "file_parts": list(file_map.keys()),
         "primary_file": list(file_map.keys())[0] if file_map else None
     }

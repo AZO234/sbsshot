@@ -6,6 +6,7 @@
   "description": "VR/HMD向けのステレオ立体画像をスクリーンショットします。",
   "license": "MIT",
   "icon": "pack.png",
+  "environment": "client",
   "entrypoints": {
     "main": [
       "me.azo234.sbsshot.SbsShotMod"
