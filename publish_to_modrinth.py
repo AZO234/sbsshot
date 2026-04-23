@@ -116,7 +116,8 @@ def publish():
         "version_type": "release",
         "client_side": "required",
         "server_side": "unsupported",
-        "files": [file_map[name] for name in file_map], # file_parts ではなく files
+        "files": [file_map[name] for name in file_map],
+        "file_parts": list(file_map.keys()), # file_parts を復活
         "primary_file": list(file_map.keys())[0] if file_map else None
     }
 
