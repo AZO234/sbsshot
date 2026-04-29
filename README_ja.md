@@ -35,6 +35,8 @@ SBS画像ファイルは **SBS Stereo Viewer** で閲覧できます：
 
 ## インストール
 
+**この mod はクライアントサイド専用です。サーバーにインストールしないでください。**
+
 mod の `.jar` ファイルを `.minecraft/mods/` フォルダに入れます。
 
 **Fabric** では、以下の依存 mod も必要です。
@@ -90,4 +92,4 @@ MIT
 ## リンク
 
 [Modrinth](https://modrinth.com/project/sbsshot)  
-[CurseForge](https://legacy.curseforge.com/minecraft/mc-mods/sbsshot)
+[CurseForge](https://www.curseforge.com/minecraft/mc-mods/sbsshot)
