@@ -6,6 +6,8 @@
   "sbsshot.stereo.saved":  "Stereo screenshot saved: %s",
   "sbsshot.stereo.failed": "Stereo screenshot failed.",
 
+  "sbsshot.command.usage": "Usage: /sbsshot shot — take a side-by-side stereo screenshot",
+
   "sbsshot.config.title":                         "SBSShot — Config",
   "sbsshot.config.save":                          "Save",
   "sbsshot.config.stereo.parallax_cm":            "Parallax (cm)",

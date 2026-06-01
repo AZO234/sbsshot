@@ -2,11 +2,14 @@ package me.azo234.sbsshot;
 
 import me.azo234.sbsshot.stereo.NeoStereoCapture;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.commands.Commands;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -35,5 +38,27 @@ public class StereoKeyHandler {
         while (KEY_STEREO.consumeClick()) {
             NeoStereoCapture.INSTANCE.capture(SbsShotMod.STEREO_CONFIG);
         }
+    }
+
+    // NeoForge バスに addListener(StereoKeyHandler::onRegisterClientCommands) で登録
+    // /sbsshot shot で撮影
+    @SubscribeEvent
+    public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+        event.getDispatcher().register(
+                Commands.literal("sbsshot")
+                        // 引数なし /sbsshot は使い方を表示
+                        .executes(ctx -> {
+                            ctx.getSource().sendSuccess(() ->
+                                    net.minecraft.network.chat.Component.translatable("sbsshot.command.usage"), false);
+                            return 1;
+                        })
+                        .then(Commands.literal("shot")
+                                .executes(ctx -> {
+                                    // GL 操作はメインスレッドで実行する
+                                    Minecraft.getInstance().execute(() ->
+                                            NeoStereoCapture.INSTANCE.capture(SbsShotMod.STEREO_CONFIG));
+                                    return 1;
+                                }))
+        );
     }
 }

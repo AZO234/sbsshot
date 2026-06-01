@@ -6,6 +6,8 @@
   "sbsshot.stereo.saved":  "ステレオスクリーンショットを保存しました: %s",
   "sbsshot.stereo.failed": "ステレオスクリーンショットの保存に失敗しました。",
 
+  "sbsshot.command.usage": "使い方: /sbsshot shot — サイドバイサイドのステレオ撮影を行います",
+
   "sbsshot.config.title":                         "SBSShot — 設定",
   "sbsshot.config.save":                          "保存",
   "sbsshot.config.stereo.parallax_cm":            "視差（cm）",

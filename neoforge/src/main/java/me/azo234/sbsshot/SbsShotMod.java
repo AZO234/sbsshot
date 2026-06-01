@@ -23,6 +23,9 @@ public class SbsShotMod {
         // ClientTickEvent.Post は NeoForge バス
         NeoForge.EVENT_BUS.addListener(StereoKeyHandler::onClientTick);
 
+        // RegisterClientCommandsEvent は NeoForge バス（/sbsshot shot）
+        NeoForge.EVENT_BUS.addListener(StereoKeyHandler::onRegisterClientCommands);
+
         modEventBus.addListener(this::clientSetup);
 
         container.registerExtensionPoint(IConfigScreenFactory.class,
