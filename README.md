@@ -72,6 +72,19 @@ Settings can be changed in-game via the **Mod Menu** (Fabric) or the **Config** 
 
 ---
 
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `/sbsshot shot` | Capture an SBS stereo screenshot with the current parallax |
+| `/sbsshot shot <parallax>` | Capture once using the given parallax (does not change the saved setting) |
+| `/sbsshot get_parallax` | Show the current parallax |
+| `/sbsshot set_parallax <parallax>` | Set and save the parallax |
+
+`<parallax>` is the camera separation in centimeters, ranging from `0.0` to `30.0`.
+
+---
+
 ## Technical Notes
 
 The mod renders the scene twice — once for the left eye and once for the right eye — with a horizontal camera offset matching the configured parallax. Rendering reads directly from the main render target FBO to ensure accurate frame capture.

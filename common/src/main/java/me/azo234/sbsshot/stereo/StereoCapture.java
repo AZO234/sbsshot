@@ -44,13 +44,28 @@ public abstract class StereoCapture {
 
     protected abstract void sendMessage(Minecraft mc, Component msg);
 
+    /**
+     * 視差を一時的に上書きして撮影する（設定は保存しない）。
+     * 撮影後に元の視差へ戻す。
+     */
+    public void capture(StereoConfig config, float parallaxCmOverride) {
+        float prev = config.parallaxCm;
+        config.parallaxCm = parallaxCmOverride;
+        try {
+            capture(config);
+        } finally {
+            config.parallaxCm = prev;
+        }
+    }
+
     public void capture(StereoConfig config) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
-        // プレイヤーの向きから右方向ベクトルを計算
-        float yaw = mc.player.getYRot();
-        double[] right = yawToRight(yaw);
+        // 実カメラの向きから右方向ベクトルを計算する。
+        // leftVector() を使うことで 1人称・3人称（背面/正面）・離れ視点
+        // （スペクテイター等）すべてでカメラの実際の視線に追従する。
+        double[] right = cameraRight(mc);
 
         float offsetL = config.cameraOffsetBlocks(0);  // 負（左目）
         float offsetR = config.cameraOffsetBlocks(1);  // 正（右目）
@@ -161,5 +176,22 @@ public abstract class StereoCapture {
     protected static double[] yawToRight(float yaw) {
         double rad = Math.toRadians(yaw + 90.0);
         return new double[]{ -Math.sin(rad), 0.0, Math.cos(rad) };
+    }
+
+    /**
+     * 実カメラの左右軸（水平成分）から右方向の単位ベクトルを返す。
+     * カメラ右 = -leftVector()。視点モードに依存せず正しい視差方向になる。
+     * カメラがほぼ真上/真下を向く場合はカメラ yaw でフォールバックする。
+     */
+    protected static double[] cameraRight(Minecraft mc) {
+        var cam = mc.gameRenderer.getMainCamera();
+        org.joml.Vector3fc left = cam.leftVector();
+        double rx = -left.x();
+        double rz = -left.z();
+        double len = Math.sqrt(rx * rx + rz * rz);
+        if (len < 1.0e-4) {
+            return yawToRight(cam.yRot());
+        }
+        return new double[]{ rx / len, 0.0, rz / len };
     }
 }

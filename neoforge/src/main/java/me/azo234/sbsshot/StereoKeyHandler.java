@@ -1,9 +1,11 @@
 package me.azo234.sbsshot;
 
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import me.azo234.sbsshot.stereo.NeoStereoCapture;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -49,16 +51,42 @@ public class StereoKeyHandler {
                         // 引数なし /sbsshot は使い方を表示
                         .executes(ctx -> {
                             ctx.getSource().sendSuccess(() ->
-                                    net.minecraft.network.chat.Component.translatable("sbsshot.command.usage"), false);
+                                    Component.translatable("sbsshot.command.usage"), false);
                             return 1;
                         })
+                        // /sbsshot shot [parallax]
                         .then(Commands.literal("shot")
                                 .executes(ctx -> {
                                     // GL 操作はメインスレッドで実行する
                                     Minecraft.getInstance().execute(() ->
                                             NeoStereoCapture.INSTANCE.capture(SbsShotMod.STEREO_CONFIG));
                                     return 1;
+                                })
+                                .then(Commands.argument("parallax", FloatArgumentType.floatArg(0.0f, 30.0f))
+                                        .executes(ctx -> {
+                                            float p = FloatArgumentType.getFloat(ctx, "parallax");
+                                            Minecraft.getInstance().execute(() ->
+                                                    NeoStereoCapture.INSTANCE.capture(SbsShotMod.STEREO_CONFIG, p));
+                                            return 1;
+                                        })))
+                        // /sbsshot get_parallax
+                        .then(Commands.literal("get_parallax")
+                                .executes(ctx -> {
+                                    ctx.getSource().sendSuccess(() -> Component.translatable(
+                                            "sbsshot.command.get_parallax", SbsShotMod.STEREO_CONFIG.parallaxCm), false);
+                                    return 1;
                                 }))
+                        // /sbsshot set_parallax <parallax>
+                        .then(Commands.literal("set_parallax")
+                                .then(Commands.argument("parallax", FloatArgumentType.floatArg(0.0f, 30.0f))
+                                        .executes(ctx -> {
+                                            float p = FloatArgumentType.getFloat(ctx, "parallax");
+                                            SbsShotMod.STEREO_CONFIG.parallaxCm = p;
+                                            NeoConfigHelper.saveParallax(p);
+                                            ctx.getSource().sendSuccess(() -> Component.translatable(
+                                                    "sbsshot.command.set_parallax", p), false);
+                                            return 1;
+                                        })))
         );
     }
 }

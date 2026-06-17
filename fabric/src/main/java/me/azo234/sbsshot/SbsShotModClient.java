@@ -1,5 +1,6 @@
 package me.azo234.sbsshot;
 
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import me.azo234.sbsshot.stereo.NeoStereoCapture;
 import me.azo234.sbsshot.stereo.StereoConfig;
 import net.fabricmc.api.ClientModInitializer;
@@ -9,6 +10,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 
@@ -40,23 +42,49 @@ public class SbsShotModClient implements ClientModInitializer {
             }
         });
 
-        // /sbsshot shot で撮影
+        // /sbsshot コマンド
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
                 dispatcher.register(
                         ClientCommands.literal("sbsshot")
                                 // 引数なし /sbsshot は使い方を表示
                                 .executes(ctx -> {
                                     ctx.getSource().sendFeedback(
-                                            net.minecraft.network.chat.Component.translatable("sbsshot.command.usage"));
+                                            Component.translatable("sbsshot.command.usage"));
                                     return 1;
                                 })
+                                // /sbsshot shot [parallax]
                                 .then(ClientCommands.literal("shot")
                                         .executes(ctx -> {
                                             // GL 操作はメインスレッドで実行する
                                             Minecraft.getInstance().execute(() ->
                                                     NeoStereoCapture.INSTANCE.capture(STEREO_CONFIG));
                                             return 1;
+                                        })
+                                        .then(ClientCommands.argument("parallax", FloatArgumentType.floatArg(0.0f, 30.0f))
+                                                .executes(ctx -> {
+                                                    float p = FloatArgumentType.getFloat(ctx, "parallax");
+                                                    Minecraft.getInstance().execute(() ->
+                                                            NeoStereoCapture.INSTANCE.capture(STEREO_CONFIG, p));
+                                                    return 1;
+                                                })))
+                                // /sbsshot get_parallax
+                                .then(ClientCommands.literal("get_parallax")
+                                        .executes(ctx -> {
+                                            ctx.getSource().sendFeedback(Component.translatable(
+                                                    "sbsshot.command.get_parallax", STEREO_CONFIG.parallaxCm));
+                                            return 1;
                                         }))
+                                // /sbsshot set_parallax <parallax>
+                                .then(ClientCommands.literal("set_parallax")
+                                        .then(ClientCommands.argument("parallax", FloatArgumentType.floatArg(0.0f, 30.0f))
+                                                .executes(ctx -> {
+                                                    float p = FloatArgumentType.getFloat(ctx, "parallax");
+                                                    STEREO_CONFIG.parallaxCm = p;
+                                                    FabricConfigHelper.save(STEREO_CONFIG);
+                                                    ctx.getSource().sendFeedback(Component.translatable(
+                                                            "sbsshot.command.set_parallax", p));
+                                                    return 1;
+                                                })))
                 ));
     }
 }

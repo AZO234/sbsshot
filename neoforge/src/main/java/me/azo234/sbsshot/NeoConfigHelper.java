@@ -30,6 +30,11 @@ public class NeoConfigHelper {
         cfg.outputSubDir = CLIENT.outputSubDir.get();
     }
 
+    /** 視差(cm)を設定ファイルへ保存する。 */
+    public static void saveParallax(float parallaxCm) {
+        CLIENT.parallaxCm.set((double) parallaxCm);
+    }
+
     public static class ClientConfig {
         public final ModConfigSpec.DoubleValue parallaxCm;
         public final ModConfigSpec.ConfigValue<String> outputSubDir;
@@ -40,7 +45,7 @@ public class NeoConfigHelper {
             parallaxCm = b
                     .comment("Inter-ocular distance in cm (human average ~6.5)")
                     .translation("sbsshot.config.stereo.parallax_cm")
-                    .defineInRange("parallax_cm", 6.5, 1.0, 30.0);
+                    .defineInRange("parallax_cm", 6.5, 0.0, 30.0);
 
             outputSubDir = b
                     .comment("Sub-directory under screenshots/")

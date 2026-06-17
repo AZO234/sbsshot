@@ -75,7 +75,7 @@ public class StereoConfigScreen extends Screen {
     }
 
     private void save() {
-        try { config.parallaxCm = Math.max(1f, Math.min(30f,
+        try { config.parallaxCm = Math.max(0f, Math.min(30f,
                 Float.parseFloat(parallaxBox.getValue().trim())));
         } catch (NumberFormatException ignored) {}
         String d = outputSubDirBox.getValue().trim();
