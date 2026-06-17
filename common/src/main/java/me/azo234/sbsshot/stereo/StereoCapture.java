@@ -104,7 +104,7 @@ public abstract class StereoCapture {
     protected static BufferedImage readFramebuffer(Minecraft mc) {
         // renderLevel() は mainRenderTarget (FBO) に描画する。
         // GL11.glReadPixels はデフォルト FBO を読むため、mainRenderTarget の FBO を bind する。
-        Object rt = mc.getMainRenderTarget();
+        Object rt = McCompat.mainRenderTarget(mc);
         int w = getRtInt(rt, "width",  mc.getWindow().getWidth());
         int h = getRtInt(rt, "height", mc.getWindow().getHeight());
 
@@ -184,7 +184,7 @@ public abstract class StereoCapture {
      * カメラがほぼ真上/真下を向く場合はカメラ yaw でフォールバックする。
      */
     protected static double[] cameraRight(Minecraft mc) {
-        var cam = mc.gameRenderer.getMainCamera();
+        net.minecraft.client.Camera cam = McCompat.mainCamera(mc);
         org.joml.Vector3fc left = cam.leftVector();
         double rx = -left.x();
         double rz = -left.z();

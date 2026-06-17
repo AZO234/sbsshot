@@ -1,5 +1,6 @@
 package me.azo234.sbsshot;
 
+import me.azo234.sbsshot.stereo.McCompat;
 import me.azo234.sbsshot.stereo.StereoConfig;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -71,7 +72,7 @@ public class StereoConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (this.minecraft != null) this.minecraft.setScreen(parent);
+        if (this.minecraft != null) McCompat.setScreen(this.minecraft, parent);
     }
 
     private void save() {

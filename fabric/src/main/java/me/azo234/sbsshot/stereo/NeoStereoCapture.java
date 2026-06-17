@@ -21,7 +21,7 @@ public class NeoStereoCapture extends StereoCapture {
 
         try {
             entity.setPos(ox + rightX * offset, oy, oz + rightZ * offset);
-            mc.gameRenderer.update(DeltaTracker.ONE, true);
+            McCompat.updateGameRenderer(mc, DeltaTracker.ONE);
             mc.gameRenderer.extract(DeltaTracker.ONE, true);
             mc.gameRenderer.renderLevel(DeltaTracker.ONE);
             return readFramebuffer(mc);
@@ -32,7 +32,7 @@ public class NeoStereoCapture extends StereoCapture {
             entity.setPos(ox, oy, oz);
             entity.setYRot(oyaw);
             entity.setXRot(opitch);
-            mc.gameRenderer.update(DeltaTracker.ONE, true);
+            McCompat.updateGameRenderer(mc, DeltaTracker.ONE);
             mc.gameRenderer.extract(DeltaTracker.ONE, true);
         }
     }
