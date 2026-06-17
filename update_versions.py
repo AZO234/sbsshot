@@ -29,7 +29,8 @@ def find_latest_match(versions, pattern):
     return matches[-1]
 
 def is_stable_mc(ver):
-    return bool(re.match(r"^26\.1(\.\d+)?$", ver))
+    # 26.x 系の安定版（26.1, 26.2, 26.1.2 など）を対象にする
+    return bool(re.match(r"^26\.\d+(\.\d+)?$", ver))
 
 def update():
     print("Fetching Minecraft versions from Fabric Meta...")
@@ -42,7 +43,7 @@ def update():
         return
 
     if not mc_versions:
-        print("No stable Minecraft versions starting with 26.1 found.")
+        print("No stable Minecraft versions starting with 26 found.")
         return
 
     print(f"Targeting Minecraft versions: {mc_versions}")
