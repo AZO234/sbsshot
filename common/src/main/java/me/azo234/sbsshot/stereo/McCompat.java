@@ -1,5 +1,7 @@
 package me.azo234.sbsshot.stereo;
 
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -18,6 +20,7 @@ import java.lang.reflect.Method;
  *   - GameRenderer.getMainCamera()        → GameRenderer.mainCamera()
  *   - GameRenderer.update(DeltaTracker, boolean) → update(DeltaTracker)
  *   - Minecraft.setScreen(Screen)         → setScreenAndShow(Screen)
+ *   - CommandEncoder.submit() 追加（明示的なコマンドサブミット）
  */
 public final class McCompat {
 
@@ -82,5 +85,29 @@ public final class McCompat {
             } catch (ReflectiveOperationException ignored) {}
         }
         throw new IllegalStateException("[SBSShot] setScreen not found");
+    }
+
+    /**
+     * 記録済みの GPU コマンドをサブミットしてフェンス境界を作る（26.2+）。
+     *
+     * 26.2 では 1 フレーム＝1 コマンドサブミットで構築されるため、
+     * フレーム外（クライアント tick 中）で renderLevel()/extract() を行うと、
+     * ユニフォームのリングバッファがサブミットされないまま進み、次の実フレームが
+     * 「現在のサブミットのフェンスを待てない」で落ちる（特に Vulkan）。
+     * 手動レンダー後に submit() してコマンドバッファを閉じることで解消する。
+     *
+     * 26.1.x には CommandEncoder#submit が無い（フレーム末尾で暗黙サブミット）ため
+     * リフレクションが失敗し no-op になる。
+     */
+    public static void submitCommands() {
+        try {
+            CommandEncoder enc = RenderSystem.getDevice().createCommandEncoder();
+            // submit() は 26.2 で追加。直接参照すると 26.1.x でコンパイル不能なため反射。
+            enc.getClass().getMethod("submit").invoke(enc);
+        } catch (ReflectiveOperationException ignored) {
+            // 26.1.x: submit() 無し
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 }

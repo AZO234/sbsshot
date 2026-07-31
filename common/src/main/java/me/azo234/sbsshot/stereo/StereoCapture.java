@@ -1,29 +1,34 @@
 package me.azo234.sbsshot.stereo;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
 
 /**
  * ステレオ撮影の共通ロジック。
  *
  * カメラオフセットは各ローダーのサブクラスで実装する。
- * このクラスは撮影フロー・FBO からのフレームバッファ読み取り・SBS PNG 保存を担当する。
+ * このクラスは撮影フロー・レンダーターゲット読み取り・SBS PNG 保存を担当する。
  *
- * 26.1 の変更点:
- *   - renderLevel() は mainRenderTarget (FBO) に描画する（画面バッファではない）
- *   - FBO ID は colorTexture (GlTexture)#firstFboId から取得する
- *   - Camera.setup() 廃止 → update(DeltaTracker) + setPosition() で代替
+ * フレームバッファ読み取りは {@link Screenshot#takeScreenshot} を使う。
+ * これは blaze3d の GPU 抽象（CommandEncoder/GpuBuffer）経由で読み取るため、
+ * OpenGL・Vulkan 双方のバックエンドで安全に動作する。
+ * （旧実装は生の GL glReadPixels を使っていたため、Vulkan では
+ *   「No context is current」で JVM が abort していた。）
+ *
+ * 読み取りは非同期（GPU フェンス後にコールバックが発火）である点に注意。
+ * このためレンダリングと結合・保存はコールバックで受け渡す。
  */
 public abstract class StereoCapture {
 
@@ -32,15 +37,16 @@ public abstract class StereoCapture {
 
     /**
      * カメラを指定オフセットに移動してレンダリングし、
-     * フレームバッファを読んで返す。
+     * 読み取り結果（BufferedImage）を非同期にコールバックへ渡す。
      *
-     * @param mc     Minecraft インスタンス
-     * @param rightX 右方向単位ベクトル X
-     * @param rightZ 右方向単位ベクトル Z
-     * @param offset カメラ横オフセット（ブロック単位、負=左目、正=右目）
+     * @param mc       Minecraft インスタンス
+     * @param rightX   右方向単位ベクトル X
+     * @param rightZ   右方向単位ベクトル Z
+     * @param offset   カメラ横オフセット（ブロック単位、負=左目、正=右目）
+     * @param consumer 読み取り完了時に画像を受け取るコールバック
      */
-    protected abstract BufferedImage renderWithOffset(Minecraft mc,
-            double rightX, double rightZ, float offset);
+    protected abstract void renderWithOffset(Minecraft mc,
+            double rightX, double rightZ, float offset, Consumer<BufferedImage> consumer);
 
     protected abstract void sendMessage(Minecraft mc, Component msg);
 
@@ -70,16 +76,40 @@ public abstract class StereoCapture {
         float offsetL = config.cameraOffsetBlocks(0);  // 負（左目）
         float offsetR = config.cameraOffsetBlocks(1);  // 正（右目）
 
-        BufferedImage left    = renderWithOffset(mc, right[0], right[2], offsetL);
-        BufferedImage rightImg = renderWithOffset(mc, right[0], right[2], offsetR);
+        // 左右それぞれレンダリング → GPU 読み取りは非同期に発火する。
+        // 両目の画像が揃った時点で結合・保存する。
+        //
+        // 2 回の renderLevel と 2 回の読み取りコピーは同一コマンドバッファに
+        // 記録順で積まれ、GPU 上でもその順に実行される
+        // （左描画→左コピー→右描画→右コピー）ため、各目の画素は正しく分離される。
+        final BufferedImage[] eyes = new BufferedImage[2];
+        renderWithOffset(mc, right[0], right[2], offsetL, img -> {
+            eyes[0] = img;
+            finishIfReady(mc, config, eyes);
+        });
+        renderWithOffset(mc, right[0], right[2], offsetR, img -> {
+            eyes[1] = img;
+            finishIfReady(mc, config, eyes);
+        });
 
+        // フレーム外で積んだコマンドをサブミットしてフェンス境界を作る。
+        // これをしないと 26.2 の Vulkan で次フレームが
+        // 「Cannot wait on a fence for the current submit」で落ちる。
+        McCompat.submitCommands();
+    }
+
+    /** 両目の画像が揃っていれば SBS 結合して PNG 保存する。 */
+    private void finishIfReady(Minecraft mc, StereoConfig config, BufferedImage[] eyes) {
+        BufferedImage left = eyes[0], rightImg = eyes[1];
         if (left == null || rightImg == null) return;
 
         // SBS 結合（左 | 右）
         int w = left.getWidth(), h = left.getHeight();
         BufferedImage sbs = new BufferedImage(w * 2, h, BufferedImage.TYPE_INT_RGB);
-        sbs.getGraphics().drawImage(left,      0, 0, null);
-        sbs.getGraphics().drawImage(rightImg,  w, 0, null);
+        var g = sbs.getGraphics();
+        g.drawImage(left,     0, 0, null);
+        g.drawImage(rightImg, w, 0, null);
+        g.dispose();
 
         // PNG 保存
         File outDir = new File(mc.gameDirectory, "screenshots/" + config.outputSubDir);
@@ -101,76 +131,42 @@ public abstract class StereoCapture {
         sendMessage(mc, msg);
     }
 
-    protected static BufferedImage readFramebuffer(Minecraft mc) {
-        // renderLevel() は mainRenderTarget (FBO) に描画する。
-        // GL11.glReadPixels はデフォルト FBO を読むため、mainRenderTarget の FBO を bind する。
-        Object rt = McCompat.mainRenderTarget(mc);
-        int w = getRtInt(rt, "width",  mc.getWindow().getWidth());
-        int h = getRtInt(rt, "height", mc.getWindow().getHeight());
+    /**
+     * メインレンダーターゲットを読み取り、BufferedImage を非同期にコールバックへ渡す。
+     *
+     * {@link Screenshot#takeScreenshot} は copyTextureToBuffer で
+     * 「呼び出し時点の」テクスチャ内容を GPU バッファへ即コピーするため、
+     * 左右の目でターゲットを共有していても取得順序は保たれる。
+     * バッファ→NativeImage 変換（＝コールバック発火）は GPU フェンス後、
+     * レンダースレッド上で行われる。
+     */
+    protected static void captureTarget(Minecraft mc, Consumer<BufferedImage> consumer) {
+        RenderTarget rt = (RenderTarget) McCompat.mainRenderTarget(mc);
+        Screenshot.takeScreenshot(rt, nativeImage -> {
+            // NativeImage の所有権はコールバックにある。使い終わったら閉じる。
+            try {
+                consumer.accept(toBufferedImage(nativeImage));
+            } catch (Throwable e) {
+                e.printStackTrace();
+            } finally {
+                nativeImage.close();
+            }
+        });
+    }
 
-        int fboId = getFboId(rt);
-        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, fboId);
-        org.lwjgl.opengl.GL11.glFinish();
-
-        ByteBuffer buf = ByteBuffer.allocateDirect(w * h * 4);
-        GL11.glReadPixels(0, 0, w, h, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf);
-
-        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, 0);
-
+    /**
+     * NativeImage を不透明 RGB の BufferedImage に変換する。
+     * NativeImage#getPixel は ARGB を返し、原点は左上（vanilla スクショと同じ向き）。
+     */
+    private static BufferedImage toBufferedImage(NativeImage src) {
+        int w = src.getWidth(), h = src.getHeight();
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                int r = buf.get() & 0xFF, g = buf.get() & 0xFF, b = buf.get() & 0xFF;
-                buf.get();
-                img.setRGB(x, h - 1 - y, (r << 16) | (g << 8) | b);
+                img.setRGB(x, y, src.getPixel(x, y) & 0xFFFFFF);
             }
         }
         return img;
-    }
-
-    private static java.lang.reflect.Field findField(Class<?> cls, String name) {
-        while (cls != null && cls != Object.class) {
-            try {
-                var f = cls.getDeclaredField(name);
-                f.setAccessible(true);
-                return f;
-            } catch (Exception ignored) {}
-            cls = cls.getSuperclass();
-        }
-        return null;
-    }
-
-    private static int getRtInt(Object rt, String fieldName, int fallback) {
-        Class<?> cls = rt.getClass();
-        while (cls != null) {
-            try {
-                var f = cls.getDeclaredField(fieldName);
-                f.setAccessible(true);
-                return f.getInt(rt);
-            } catch (Exception ignored) {}
-            cls = cls.getSuperclass();
-        }
-        return fallback;
-    }
-
-    /** RenderTarget の FBO ID を取得。
-     *  26.1: colorTexture (GlTexture)#firstFboId が FBO ID。
-     */
-    private static int getFboId(Object rt) {
-        try {
-            var colorTexField = findField(rt.getClass(), "colorTexture");
-            if (colorTexField != null) {
-                Object colorTex = colorTexField.get(rt);
-                var fboIdField = findField(colorTex.getClass(), "firstFboId");
-                if (fboIdField != null) {
-                    return fboIdField.getInt(colorTex);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.err.println("[SBSShot] WARNING: Could not find FBO id");
-        return 0;
     }
 
     protected static double[] yawToRight(float yaw) {

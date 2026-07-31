@@ -5,16 +5,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 import java.awt.image.BufferedImage;
+import java.util.function.Consumer;
 
 public class NeoStereoCapture extends StereoCapture {
 
     public static final NeoStereoCapture INSTANCE = new NeoStereoCapture();
 
     @Override
-    protected BufferedImage renderWithOffset(Minecraft mc,
-            double rightX, double rightZ, float offset) {
+    protected void renderWithOffset(Minecraft mc,
+            double rightX, double rightZ, float offset, Consumer<BufferedImage> consumer) {
         var entity = mc.getCameraEntity();
-        if (entity == null) return null;
+        if (entity == null) return;
 
         double ox = entity.getX(), oy = entity.getY(), oz = entity.getZ();
         float oyaw = entity.getYRot(), opitch = entity.getXRot();
@@ -24,10 +25,10 @@ public class NeoStereoCapture extends StereoCapture {
             McCompat.updateGameRenderer(mc, DeltaTracker.ONE);
             mc.gameRenderer.extract(DeltaTracker.ONE, true);
             mc.gameRenderer.renderLevel(DeltaTracker.ONE);
-            return readFramebuffer(mc);
+            // 読み取りは非同期。この時点のフレームバッファ内容が即 GPU バッファへコピーされる。
+            captureTarget(mc, consumer);
         } catch (Throwable e) {
             e.printStackTrace();
-            return null;
         } finally {
             entity.setPos(ox, oy, oz);
             entity.setYRot(oyaw);
